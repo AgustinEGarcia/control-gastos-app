@@ -6,7 +6,8 @@
 - [x] Estructura inicial de configuración generada (`.env.example`, `FALLBACK_AGENTS.md`).
 - [x] Node.js LTS (v24.19.0) y Git instalados en el entorno.
 - [x] Proyecto Next.js inicializado en la raíz (TypeScript, Tailwind CSS, App Router, `src/`).
-- [x] Entorno de testing (Vitest, Testing Library, jsdom) configurado y validado (`npm test` pasando).
+- [x] Entorno de testing unitario (Vitest, Testing Library, jsdom) configurado y validado (`npm test` pasando).
+- [x] Entorno de testing E2E (Playwright con Chromium) configurado y validado (`npm run test:e2e` pasando).
 - [x] Dependencias de Supabase instaladas (`@supabase/supabase-js`, `@supabase/ssr`).
 - [x] Repositorio Git local inicializado con rama `main` y commit inicial completado.
 - [x] Repositorio remoto de GitHub vinculado y sincronizado (`https://github.com/AgustinEGarcia/control-gastos-app`).
@@ -18,8 +19,9 @@
 - Iniciar el desarrollo del primer módulo de la aplicación (Autenticación y Métodos de Pago / Gastos Recurrentes).
 
 ## Historial de Cambios y Decisiones
-- Se definió el stack 100% gratuito (Next.js, Supabase, Tailwind, Resend, Vitest).
+- Se definió el stack 100% gratuito (Next.js, Supabase, Tailwind, Resend, Vitest, Playwright).
 - Se estructuró la carpeta `docs/` para garantizar persistencia multi-agente.
 - Se fijó la regla permanente de comunicación 100% en español en todos los archivos de reglas del proyecto.
-- Se implementó `vitest.config.ts` y se verificó con una prueba inicial exitosa.
+- Se implementó `vitest.config.ts` para pruebas unitarias de lógica y cálculo en `src/`.
+- Se implementó `playwright.config.ts` y se creó `e2e/home.spec.ts` para pruebas E2E de navegador, verificadas exitosamente.
 - Se inicializó el control de versiones Git en la rama `main` con el commit inicial y se publicó en GitHub.

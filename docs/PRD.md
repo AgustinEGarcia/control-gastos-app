@@ -12,4 +12,4 @@ Aplicación web de gestión financiera integral de costo $0 para el control de g
 4. **Préstamos Tomados (Deudas Propias):** Registro de préstamos de personas (ej. papá) con soporte multidivisa (ARS / USD), abonos parciales y saldo restante.
 5. **Portal de Deudores (Invitados):** Acceso simplificado para que terceros consulten su estado de cuenta, cuotas pendientes y abonos realizados.
 6. **Alertas Preventivas por Email:** Notificación por correo (vía Resend) 1 día antes de cada fecha de vencimiento.
-7. **Estrategia Anti-Regresión:** Pruebas unitarias con Vitest antes de cada entrega de código.
+7. **Estrategia Anti-Regresión:** Pruebas unitarias de cálculo con Vitest y pruebas end-to-end de flujos de usuario con Playwright antes de cada entrega de código.
