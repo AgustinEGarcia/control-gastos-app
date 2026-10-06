@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       payment_methods: {
@@ -22,7 +22,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
-          user_id?: string;
+          user_id: string;
           name: string;
           is_own?: boolean;
           owner_name?: string | null;
@@ -40,6 +40,7 @@ export interface Database {
           due_day?: number | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       people: {
         Row: {
@@ -52,7 +53,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
-          user_id?: string;
+          user_id: string;
           associated_auth_user_id?: string | null;
           name: string;
           email?: string | null;
@@ -66,6 +67,7 @@ export interface Database {
           email?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       recurring_expenses: {
         Row: {
@@ -81,7 +83,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
-          user_id?: string;
+          user_id: string;
           name: string;
           category?: string | null;
           estimated_amount: number;
@@ -101,6 +103,7 @@ export interface Database {
           is_active?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
       transactions: {
         Row: {
@@ -118,7 +121,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
-          user_id?: string;
+          user_id: string;
           description: string;
           total_amount: number;
           installments_count?: number;
@@ -142,6 +145,7 @@ export interface Database {
           payer_person_id?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       installments: {
         Row: {
@@ -171,6 +175,7 @@ export interface Database {
           is_paid?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
       personal_loans: {
         Row: {
@@ -186,7 +191,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
-          user_id?: string;
+          user_id: string;
           lender_person_id: string;
           initial_amount: number;
           currency?: string;
@@ -206,6 +211,7 @@ export interface Database {
           notes?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       loan_repayments: {
         Row: {
@@ -232,6 +238,7 @@ export interface Database {
           notes?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       payments_received: {
         Row: {
@@ -245,7 +252,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
-          user_id?: string;
+          user_id: string;
           person_id: string;
           amount: number;
           payment_date: string;
@@ -261,7 +268,20 @@ export interface Database {
           notes?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
-}
+};
