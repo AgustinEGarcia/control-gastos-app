@@ -16,5 +16,4 @@ Memoria del proyecto entre sesiones. Máximo ~50 líneas: resumir o eliminar lo 
 - Cargar gastos y transacciones en paralelo con `Promise.all` para optimizar latencia.
 
 ## Próximos pasos
-- Punto 2: Configurar automatización del Cron Job diario (`vercel.json` / GitHub Actions).
-- Punto 3: Validar tablas en Supabase y desplegar en Vercel.
+- Paso siguiente: Ejecutar el script SQL de `docs/OPENSPEC.md` en el SQL Editor de Supabase y conectar el repositorio a Vercel para producción.
