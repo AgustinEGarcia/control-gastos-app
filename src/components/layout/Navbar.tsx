@@ -95,6 +95,16 @@ export function Navbar() {
             >
               Préstamos
             </a>
+            <a
+              href="/deudores"
+              className={`px-3 py-1.5 rounded-md transition-colors ${
+                pathname === '/deudores'
+                  ? 'bg-zinc-800 text-white font-medium'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+              }`}
+            >
+              Deudores
+            </a>
           </nav>
         </div>
 

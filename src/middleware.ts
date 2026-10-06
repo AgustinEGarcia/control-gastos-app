@@ -40,7 +40,8 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/metodos-pago') ||
     request.nextUrl.pathname.startsWith('/gastos-recurrentes') ||
     request.nextUrl.pathname.startsWith('/transacciones') ||
-    request.nextUrl.pathname.startsWith('/prestamos');
+    request.nextUrl.pathname.startsWith('/prestamos') ||
+    request.nextUrl.pathname.startsWith('/deudores');
 
   // Redirigir a login si intenta ingresar a una ruta protegida sin sesión
   if (isProtectedRoute && !user) {
