@@ -1,6 +1,18 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Si el usuario ya inició sesión, redirigir directamente a su Dashboard 360°
+  if (user) {
+    redirect('/dashboard');
+  }
+
   return (
     <div className="flex-1 flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-16 sm:py-24 text-center">
       {/* Badge Superior */}
@@ -24,10 +36,10 @@ export default function Home() {
       {/* Botones de Acción */}
       <div className="flex flex-col sm:flex-row items-center gap-4 justify-center w-full max-w-sm mb-16">
         <Link
-          href="/metodos-pago"
+          href="/dashboard"
           className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-sm transition-all shadow-xl shadow-emerald-500/20 active:scale-95"
         >
-          Gestionar Métodos de Pago
+          Ir al Dashboard
         </Link>
         <Link
           href="/login"

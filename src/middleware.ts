@@ -37,6 +37,7 @@ export async function middleware(request: NextRequest) {
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login');
   const isProtectedRoute =
+    request.nextUrl.pathname.startsWith('/dashboard') ||
     request.nextUrl.pathname.startsWith('/metodos-pago') ||
     request.nextUrl.pathname.startsWith('/gastos-recurrentes') ||
     request.nextUrl.pathname.startsWith('/transacciones') ||
@@ -52,10 +53,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Si ya tiene sesión activa y visita /login, enviarlo a /metodos-pago
+  // Si ya tiene sesión activa y visita /login, enviarlo a /dashboard
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone();
-    url.pathname = '/metodos-pago';
+    url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
 
