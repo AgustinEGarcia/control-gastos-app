@@ -191,13 +191,36 @@ export async function getTransactions(
     .select(`
       *,
       payment_method:payment_methods(*),
-      beneficiary:people(*),
+      beneficiary:people!beneficiary_person_id(*),
       installments(*)
     `)
     .order('purchase_date', { ascending: false });
 
   if (error) {
-    throw new Error(`Error al obtener transacciones: ${error.message}`);
+    // Fallback seguro: si hay ambigüedad o variación en PostgREST, cargar y mapear en memoria
+    const { data: rawTxs, error: txError } = await supabase
+      .from('transactions')
+      .select(`
+        *,
+        payment_method:payment_methods(*),
+        installments(*)
+      `)
+      .order('purchase_date', { ascending: false });
+
+    if (txError) {
+      throw new Error(`Error al obtener transacciones: ${txError.message}`);
+    }
+
+    const { data: peopleData } = await supabase.from('people').select('*');
+    const peopleMap = new Map((peopleData || []).map((p: any) => [p.id, p]));
+
+    return (rawTxs || []).map((t: any) => ({
+      ...t,
+      beneficiary: t.beneficiary_person_id ? peopleMap.get(t.beneficiary_person_id) || null : null,
+      installments: (t.installments || []).sort(
+        (a: Installment, b: Installment) => a.installment_number - b.installment_number
+      ),
+    }));
   }
 
   // Ordenar cuotas internamente por número

@@ -185,16 +185,36 @@ export async function getLoans(
     .from('personal_loans')
     .select(`
       *,
-      lender:people(*),
+      lender:people!lender_person_id(*),
       repayments:loan_repayments(*)
     `)
     .order('loan_date', { ascending: false });
 
+  let rawLoans = data;
+
   if (error) {
-    throw new Error(`Error al obtener préstamos: ${error.message}`);
+    const { data: fallbackLoans, error: fallbackError } = await supabase
+      .from('personal_loans')
+      .select(`
+        *,
+        repayments:loan_repayments(*)
+      `)
+      .order('loan_date', { ascending: false });
+
+    if (fallbackError) {
+      throw new Error(`Error al obtener préstamos: ${fallbackError.message}`);
+    }
+
+    const { data: peopleData } = await supabase.from('people').select('*');
+    const peopleMap = new Map((peopleData || []).map((p: any) => [p.id, p]));
+
+    rawLoans = (fallbackLoans || []).map((l: any) => ({
+      ...l,
+      lender: peopleMap.get(l.lender_person_id) || null,
+    }));
   }
 
-  const formatted: LoanWithDetails[] = (data || []).map((loan: any) => {
+  const formatted: LoanWithDetails[] = (rawLoans || []).map((loan: any) => {
     const repayments = (loan.repayments || []).sort(
       (a: LoanRepayment, b: LoanRepayment) =>
         new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()
