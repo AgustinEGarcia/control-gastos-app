@@ -75,6 +75,16 @@ export function Navbar() {
             >
               Gastos Fijos
             </a>
+            <a
+              href="/transacciones"
+              className={`px-3 py-1.5 rounded-md transition-colors ${
+                pathname === '/transacciones'
+                  ? 'bg-zinc-800 text-white font-medium'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+              }`}
+            >
+              Compras y Cuotas
+            </a>
           </nav>
         </div>
 

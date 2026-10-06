@@ -38,7 +38,8 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login');
   const isProtectedRoute =
     request.nextUrl.pathname.startsWith('/metodos-pago') ||
-    request.nextUrl.pathname.startsWith('/gastos-recurrentes');
+    request.nextUrl.pathname.startsWith('/gastos-recurrentes') ||
+    request.nextUrl.pathname.startsWith('/transacciones');
 
   // Redirigir a login si intenta ingresar a una ruta protegida sin sesión
   if (isProtectedRoute && !user) {
