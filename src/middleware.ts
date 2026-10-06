@@ -36,7 +36,9 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login');
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/metodos-pago');
+  const isProtectedRoute =
+    request.nextUrl.pathname.startsWith('/metodos-pago') ||
+    request.nextUrl.pathname.startsWith('/gastos-recurrentes');
 
   // Redirigir a login si intenta ingresar a una ruta protegida sin sesión
   if (isProtectedRoute && !user) {

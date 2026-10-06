@@ -2,18 +2,18 @@
 Memoria del proyecto entre sesiones. Máximo ~50 líneas: resumir o eliminar lo que ya no aporte.
 
 ## Estado actual
-- Spec 001 (Conexión Supabase y Tipos) y Spec 002 (Auth y Métodos de Pago) completadas al 100%.
-- Vistas implementadas: Landing Page (`/`), Autenticación (`/login`) y Métodos de Pago (`/metodos-pago`).
-- Suite de pruebas: 9 pruebas unitarias con Vitest y 2 pruebas E2E con Playwright (Chromium) 100% en verde.
+- Specs 001, 002 y 003 completadas al 100%.
+- Vistas activas: Landing Page (`/`), Auth (`/login`), Métodos de Pago (`/metodos-pago`) y Gastos Fijos (`/gastos-recurrentes`).
+- Suite de pruebas: 16 pruebas unitarias con Vitest y 4 pruebas E2E con Playwright (Chromium) 100% en verde.
 
 ## Decisiones (y por qué)
-- Modo Webpack activado en `next dev --webpack` para evitar restricciones de directivas binarias de Windows en Turbopack.
-- Middleware con `@supabase/ssr` para protección de rutas y refresco automático de cookies de sesión.
-- Validación pura desacoplada en `src/lib/services/paymentMethods.ts` para facilitar pruebas unitarias estrictas.
+- Cálculo reactivo de variaciones de gastos en `calculateExpenseTotals` comparando montos reales vs estimados solo en gastos activos.
+- Input editable inline en tarjetas de gastos para actualización ágil de montos al recibir facturas.
+- Rutas protegidas centralizadas en `src/middleware.ts`.
 
 ## Aprendizajes y errores a evitar
-- Configurar flags del dev server para asegurar que el webServer de Playwright levante sin colisiones de binarios en Windows.
-- En tarjetas de terceros, exigir obligatoriamente el nombre del titular para evitar registros huérfanos.
+- Modo Webpack activado en `next dev --webpack` para compatibilidad en Windows con el webServer de Playwright.
+- En gastos recurrentes sin factura cargada, tomar el estimado como base para el total mensual proyectado.
 
 ## Próximos pasos
-- Iniciar Spec 003: Módulo de Gastos Fijos Recurrentes (plantillas mensuales, actualización de facturas y montos reales).
+- Iniciar Spec 004: Transacciones y Cuotas (compras con tarjeta propia/tercero, Mercado Crédito y consumos compartidos a cobrar).

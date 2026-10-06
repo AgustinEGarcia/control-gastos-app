@@ -65,6 +65,16 @@ export function Navbar() {
             >
               Métodos de Pago
             </a>
+            <a
+              href="/gastos-recurrentes"
+              className={`px-3 py-1.5 rounded-md transition-colors ${
+                pathname === '/gastos-recurrentes'
+                  ? 'bg-zinc-800 text-white font-medium'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+              }`}
+            >
+              Gastos Fijos
+            </a>
           </nav>
         </div>
 
