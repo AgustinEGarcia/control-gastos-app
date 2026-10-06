@@ -85,6 +85,16 @@ export function Navbar() {
             >
               Compras y Cuotas
             </a>
+            <a
+              href="/prestamos"
+              className={`px-3 py-1.5 rounded-md transition-colors ${
+                pathname === '/prestamos'
+                  ? 'bg-zinc-800 text-white font-medium'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+              }`}
+            >
+              Préstamos
+            </a>
           </nav>
         </div>
 
