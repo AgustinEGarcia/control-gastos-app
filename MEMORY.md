@@ -2,18 +2,19 @@
 Memoria del proyecto entre sesiones. Máximo ~50 líneas: resumir o eliminar lo que ya no aporte.
 
 ## Estado actual
-- Specs 001 a 006 completadas al 100%.
-- Vistas activas: Landing (`/`), Login (`/login`), Métodos de Pago (`/metodos-pago`), Gastos Fijos (`/gastos-recurrentes`), Tarjetas/Cuotas (`/transacciones`), Préstamos (`/prestamos`), Deudores (`/deudores`) y Portal Público (`/estado-cuenta/[id]`).
-- Suite de pruebas: 45 pruebas unitarias con Vitest y 11 pruebas E2E con Playwright (Chromium) 100% en verde.
+- Specs 001 a 007 completadas al 100% (Todos los módulos del PRD cubiertos).
+- Vistas activas: Landing (`/`), Login (`/login`), Métodos de Pago (`/metodos-pago`), Gastos Fijos (`/gastos-recurrentes`), Tarjetas/Cuotas (`/transacciones`), Préstamos (`/prestamos`), Deudores (`/deudores`), Portal Público (`/estado-cuenta/[id]`) y Alertas (`/alertas`).
+- Suite de pruebas: 52 pruebas unitarias con Vitest y 14 pruebas E2E con Playwright (Chromium) 100% en verde.
 
 ## Decisiones (y por qué)
-- Portal público de deudores (`/estado-cuenta/[id]`): Excluido intencionalmente de la redirección forzada a `/login` en el middleware para permitir que los deudores invitados consulten su balance desde el móvil.
-- Consolidación de cobros: `payments_received` amortiza el total de compras asociadas al beneficiario.
+- Alertas preventivas por email con Resend a costo $0: Despacho a 24 horas del vencimiento con fallback simulado seguro ante falta de API Key.
+- Endpoint de cron (`/api/alerts/check-due-dates`): Autenticado con `CRON_SECRET` o sesión de usuario para invocación desatendida.
+- Portal público de deudores (`/estado-cuenta/[id]`): Acceso sin login para deudores invitados.
 - Multidivisa estricta en préstamos (ARS y USD independientes).
 
 ## Aprendizajes y errores a evitar
-- Reutilizar `getTransactions` en servicios derivados para evitar duplicidad de queries tipadas complejas.
-- Recordar que en PowerShell se separan comandos con `;` en lugar de `&&`.
+- Instalar dependencias con `npm.cmd` en Windows y validar compatibilidad SSR con endpoints API.
+- Mantener siempre variables de entorno vacías en `.env.example` (Principio Zero Trust).
 
 ## Próximos pasos
-- Iniciar Spec 007: Alertas Preventivas por Email con Resend (cron/endpoint para notificar vencimientos a 24 horas).
+- Proyecto base al 100% según el PRD. Listo para feedback de usuario, pulido estético adicional o despliegue en Vercel.
