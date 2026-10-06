@@ -2,21 +2,18 @@
 Memoria del proyecto entre sesiones. Máximo ~50 líneas: resumir o eliminar lo que ya no aporte.
 
 ## Estado actual
-- Setup base completado: Next.js 16, TypeScript, Tailwind CSS v4, Vitest, Playwright y Supabase instalados.
-- Arquitectura SDD configurada: Gobernanza, ADRs, constitución, skills y comandos CLI activos.
-- Repositorio Git inicializado y sincronizado con GitHub (`main`).
+- Setup base y arquitectura SDD completados al 100%.
+- Conexión con Supabase implementada y validada (Spec 001 cerrada): clientes `@supabase/ssr` (browser y server) y tipos en `src/types/database.types.ts`.
+- Pruebas unitarias de Vitest al 100% (4 pruebas en verde).
 
 ## Decisiones (y por qué)
-- Stack costo $0: Next.js + Supabase + Tailwind + Resend + Vitest + Playwright (Ver docs/adr/0001-stack-tecnologico-base.md).
-- Gobernanza SDD: La spec manda; todo incremento se divide en specs/NNN-*/ con formato EARS.
-- Doble testing: Vitest para lógica y Playwright para E2E con Chromium.
+- Configuración de clientes Supabase con `@supabase/ssr` para compatibilidad nativa con App Router y cookies HTTP-only.
+- Modo autónomo de ejecución adoptado para avanzar sin bloqueos intermedios.
+- Credenciales seguras en `.env.local` sin exponer datos confidenciales.
 
 ## Aprendizajes y errores a evitar
-- Instalar Node.js LTS en Windows requirió ajustar PATH y ejecución de scripts en PowerShell.
-- Aislar rutas de pruebas en vitest.config.ts para evitar colisiones con tests E2E de Playwright.
-- Evitar almacenar o compartir tokens en texto plano (Zero Trust).
+- Supabase actualizó la denominación de anon key a "Publishable key" (`sb_publishable_...`).
+- Mantener la URL base limpia sin `/rest/v1/` en `NEXT_PUBLIC_SUPABASE_URL`.
 
 ## Próximos pasos
-- Ejecutar script SQL de docs/OPENSPEC.md en el SQL Editor de Supabase.
-- Configurar credenciales del proyecto en .env.local.
-- Iniciar implementación de specs/001-setup-y-core-financiero/.
+- Iniciar Spec 002: Autenticación de Usuarios (Login/Registro con Supabase Auth) y Gestión de Métodos de Pago.
