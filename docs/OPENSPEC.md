@@ -120,4 +120,38 @@ CREATE POLICY "Admin Full Access" ON recurring_expenses FOR ALL USING (auth.uid(
 CREATE POLICY "Admin Full Access" ON transactions FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Admin Full Access" ON personal_loans FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Admin Full Access" ON payments_received FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage installments of their transactions" ON installments
+FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM transactions
+        WHERE transactions.id = installments.transaction_id
+        AND transactions.user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM transactions
+        WHERE transactions.id = installments.transaction_id
+        AND transactions.user_id = auth.uid()
+    )
+);
+
+CREATE POLICY "Users can manage repayments of their loans" ON loan_repayments
+FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM personal_loans
+        WHERE personal_loans.id = loan_repayments.loan_id
+        AND personal_loans.user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM personal_loans
+        WHERE personal_loans.id = loan_repayments.loan_id
+        AND personal_loans.user_id = auth.uid()
+    )
+);
 ```
