@@ -7,14 +7,16 @@ Memoria del proyecto entre sesiones. Máximo ~50 líneas: resumir o eliminar lo 
 - Suite de pruebas: 60 pruebas unitarias con Vitest y 17 pruebas E2E con Playwright (Chromium) 100% en verde.
 - Spec 009: Suscripciones y débitos fijos permanentes en tarjetas integrados en formularios, badges de tarjetas y cálculos de compromisos mensuales.
 
-## Decisiones (y por qué)
-- Suscripciones permanentes en tarjetas: Vinculadas a `recurring_expenses.payment_method_id` sin cuotas finitas. Se pueden cargar desde Gastos Fijos o desde el modal de Tarjetas con switch interactivo.
-- Resumen mensual de tarjetas: Consolida cuotas finitas que vencen ese mes + suscripciones activas debitadas en esa tarjeta.
-- Dashboard mensual 360°: Vista centralizada que separa matemáticamente el total propio a pagar del total a cobrar a terceros por compras compartidas.
+## Protocolo Obligatorio ante Nuevos Requerimientos (Interactivo SDD)
+1. Explicar qué se entendió y cuál será la modificación exacta prevista.
+2. Mostrar paso a paso cada etapa SDD (`spec.md` -> `plan.md` -> `tasks.md`), pidiendo confirmación al usuario tras cada una.
+3. Mostrar qué archivos y componentes se modificarán.
+4. Modificar código SOLO tras el OK expreso del usuario.
+5. Ejecutar pruebas, reportar resultados y commitear con Conventional Commits tras el visto bueno.
 
 ## Aprendizajes y errores a evitar
-- Supabase PostgREST Ambiguous Relationships: Cuando hay múltiples FKs a una misma tabla o relaciones opcionales, usar relación explícita con fallback seguro en memoria.
-- Git Push: El PAT no posee permisos `workflow`. Todo cron debe residir en `vercel.json`.
+- PostgREST Relationships: Con FKs múltiples, usar sintaxis explícita con fallback en memoria.
+- Git Push: El PAT no posee permisos `workflow`. Los crons residen en `vercel.json`.
 
 ## Próximos pasos
-- Ejecutar el ALTER TABLE en Supabase: `ALTER TABLE recurring_expenses ADD COLUMN IF NOT EXISTS payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL;`.
+- Ejecutar en Supabase: `ALTER TABLE recurring_expenses ADD COLUMN IF NOT EXISTS payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL;`.
