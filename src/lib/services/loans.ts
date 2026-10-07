@@ -15,9 +15,11 @@ export interface LoanWithDetails extends PersonalLoan {
 
 export interface LoanInput {
   lender_person_id: string;
+  loan_type?: 'borrowed' | 'lent';
   initial_amount: number;
   currency: 'ARS' | 'USD';
   loan_date: string;
+  expected_return_date?: string | null;
   notes?: string | null;
 }
 
@@ -78,7 +80,10 @@ export function validateLoanInput(input: Partial<LoanInput>): ValidationResult {
   const errors: Record<string, string> = {};
 
   if (!input.lender_person_id || !input.lender_person_id.trim()) {
-    errors.lender_person_id = 'Debes seleccionar o ingresar la persona que prestó el dinero.';
+    errors.lender_person_id =
+      input.loan_type === 'lent'
+        ? 'Debes seleccionar la persona a quien le prestaste el dinero.'
+        : 'Debes seleccionar o ingresar la persona que prestó el dinero.';
   }
 
   if (
@@ -179,9 +184,10 @@ export function calculateLoansSummary(loans: LoanWithDetails[]): LoansSummaryRes
 }
 
 export async function getLoans(
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<Database>,
+  filter?: { type?: 'borrowed' | 'lent' }
 ): Promise<LoanWithDetails[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from('personal_loans')
     .select(`
       *,
@@ -190,16 +196,28 @@ export async function getLoans(
     `)
     .order('loan_date', { ascending: false });
 
+  if (filter?.type) {
+    query = query.eq('loan_type', filter.type);
+  }
+
+  const { data, error } = await query;
+
   let rawLoans = data;
 
   if (error) {
-    const { data: fallbackLoans, error: fallbackError } = await supabase
+    let fallbackQuery = supabase
       .from('personal_loans')
       .select(`
         *,
         repayments:loan_repayments(*)
       `)
       .order('loan_date', { ascending: false });
+
+    if (filter?.type) {
+      fallbackQuery = fallbackQuery.eq('loan_type', filter.type);
+    }
+
+    const { data: fallbackLoans, error: fallbackError } = await fallbackQuery;
 
     if (fallbackError) {
       throw new Error(`Error al obtener préstamos: ${fallbackError.message}`);
@@ -227,6 +245,8 @@ export async function getLoans(
 
     return {
       ...loan,
+      loan_type: loan.loan_type || 'borrowed',
+      expected_return_date: loan.expected_return_date || null,
       lender: loan.lender,
       repayments,
       total_repaid: totalRepaid,
@@ -250,22 +270,42 @@ export async function createLoan(
     throw new Error(firstError);
   }
 
+  const insertPayload: any = {
+    user_id: userId,
+    lender_person_id: input.lender_person_id,
+    loan_type: input.loan_type || 'borrowed',
+    initial_amount: Number(input.initial_amount),
+    currency: input.currency,
+    loan_date: input.loan_date,
+    expected_return_date: input.expected_return_date ? input.expected_return_date : null,
+    notes: input.notes?.trim() || null,
+    status: 'active',
+  };
+
   const { data, error } = await supabase
     .from('personal_loans')
-    .insert({
-      user_id: userId,
-      lender_person_id: input.lender_person_id,
-      initial_amount: Number(input.initial_amount),
-      currency: input.currency,
-      loan_date: input.loan_date,
-      notes: input.notes?.trim() || null,
-      status: 'active',
-    })
+    .insert(insertPayload)
     .select()
     .single();
 
-  if (error || !data) {
-    throw new Error(`Error al registrar préstamo: ${error?.message}`);
+  if (error) {
+    // Si la columna loan_type o expected_return_date aún no existe en la BD remota, degradar elegantemente
+    if (error.message.includes('loan_type') || error.message.includes('expected_return_date')) {
+      delete insertPayload.loan_type;
+      delete insertPayload.expected_return_date;
+      const { data: retryData, error: retryError } = await supabase
+        .from('personal_loans')
+        .insert(insertPayload)
+        .select()
+        .single();
+      if (retryError) throw new Error(`Error al registrar préstamo: ${retryError.message}`);
+      return retryData;
+    }
+    throw new Error(`Error al registrar préstamo: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error('No se pudo crear el préstamo.');
   }
 
   return data;

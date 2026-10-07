@@ -11,6 +11,7 @@ interface LoanFormProps {
   onClose: () => void;
   onSubmit: (input: LoanInput) => Promise<void>;
   onCreatePerson: (name: string) => Promise<Person>;
+  initialType?: 'borrowed' | 'lent';
 }
 
 export function LoanForm({
@@ -19,13 +20,17 @@ export function LoanForm({
   onClose,
   onSubmit,
   onCreatePerson,
+  initialType = 'borrowed',
 }: LoanFormProps) {
   const today = new Date().toISOString().split('T')[0];
 
-  const [lenderId, setLenderId] = useState<string>('');
+  const [loanType, setLoanType] = useState<'borrowed' | 'lent'>(initialType);
+  const [personId, setPersonId] = useState<string>('');
   const [initialAmount, setInitialAmount] = useState<string>('');
   const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
   const [loanDate, setLoanDate] = useState<string>(today);
+  const [hasNoDueDate, setHasNoDueDate] = useState<boolean>(true);
+  const [expectedReturnDate, setExpectedReturnDate] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
 
   // Creación rápida de nueva persona
@@ -43,11 +48,11 @@ export function LoanForm({
     try {
       setIsSavingPerson(true);
       const created = await onCreatePerson(newPersonName.trim());
-      setLenderId(created.id);
+      setPersonId(created.id);
       setIsCreatingPerson(false);
       setNewPersonName('');
     } catch (err: any) {
-      alert(err.message || 'Error al crear prestamista.');
+      alert(err.message || 'Error al registrar persona.');
     } finally {
       setIsSavingPerson(false);
     }
@@ -58,10 +63,12 @@ export function LoanForm({
     setErrors({});
 
     const input: LoanInput = {
-      lender_person_id: lenderId,
+      lender_person_id: personId,
+      loan_type: loanType,
       initial_amount: Number(initialAmount),
       currency,
       loan_date: loanDate,
+      expected_return_date: !hasNoDueDate && expectedReturnDate ? expectedReturnDate : null,
       notes: notes.trim() || null,
     };
 
@@ -75,10 +82,12 @@ export function LoanForm({
       setIsSubmitting(true);
       await onSubmit(input);
       // Reset
-      setLenderId('');
+      setPersonId('');
       setInitialAmount('');
       setCurrency('ARS');
       setLoanDate(today);
+      setHasNoDueDate(true);
+      setExpectedReturnDate('');
       setNotes('');
       onClose();
     } catch (err: any) {
@@ -88,14 +97,20 @@ export function LoanForm({
     }
   };
 
+  const isLent = loanType === 'lent';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
           <div>
-            <h3 className="text-lg font-bold text-white">Registrar Nuevo Préstamo</h3>
+            <h3 className="text-lg font-bold text-white">
+              {isLent ? 'Registrar Dinero Prestado' : 'Registrar Deuda / Préstamo Tomado'}
+            </h3>
             <p className="text-xs text-slate-400">
-              Registra una deuda personal tomada en pesos o dólares.
+              {isLent
+                ? 'Registra plata que le prestaste a alguien para hacerle seguimiento.'
+                : 'Registra un préstamo personal que recibiste y debes devolver.'}
             </p>
           </div>
           <button
@@ -107,6 +122,32 @@ export function LoanForm({
           </button>
         </div>
 
+        {/* SELECTOR DE DIRECCIÓN DEL PRÉSTAMO */}
+        <div className="flex p-1 bg-slate-950 rounded-xl mb-5 border border-slate-800">
+          <button
+            type="button"
+            onClick={() => setLoanType('lent')}
+            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              isLent
+                ? 'bg-emerald-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>📤</span> Presté Dinero (A Cobrar)
+          </button>
+          <button
+            type="button"
+            onClick={() => setLoanType('borrowed')}
+            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              !isLent
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>📥</span> Me Prestaron (A Pagar)
+          </button>
+        </div>
+
         {errors.form && (
           <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400">
             {errors.form}
@@ -114,11 +155,11 @@ export function LoanForm({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* PRESTAMISTA */}
+          {/* PERSONA INVOLUCRADA */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-medium text-slate-300">
-                Prestamista / Acreedor *
+                {isLent ? 'Persona a quien le prestaste *' : 'Persona que te prestó *'}
               </label>
               {!isCreatingPerson && (
                 <button
@@ -137,7 +178,7 @@ export function LoanForm({
                   type="text"
                   value={newPersonName}
                   onChange={(e) => setNewPersonName(e.target.value)}
-                  placeholder="Nombre de la persona (ej. Papá, Marcos)"
+                  placeholder="Nombre de la persona (ej. Juan, Carlos, Papá)"
                   className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
                 />
                 <button
@@ -158,12 +199,14 @@ export function LoanForm({
               </div>
             ) : (
               <select
-                value={lenderId}
-                onChange={(e) => setLenderId(e.target.value)}
+                value={personId}
+                onChange={(e) => setPersonId(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
                 required
               >
-                <option value="">Selecciona quién te prestó el dinero</option>
+                <option value="">
+                  {isLent ? 'Selecciona a quién le diste el dinero' : 'Selecciona quién te prestó el dinero'}
+                </option>
                 {people.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -210,7 +253,7 @@ export function LoanForm({
 
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Monto del Préstamo *
+                Monto Prestado *
               </label>
               <input
                 type="number"
@@ -228,21 +271,59 @@ export function LoanForm({
             </div>
           </div>
 
-          {/* FECHA DEL PRÉSTAMO */}
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Fecha del Préstamo *
-            </label>
+          {/* FECHA DEL PRÉSTAMO Y FECHA DE DEVOLUCIÓN */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                Fecha de Entrega *
+              </label>
+              <input
+                type="date"
+                value={loanDate}
+                onChange={(e) => setLoanDate(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                required
+              />
+              {errors.loan_date && (
+                <p className="text-[11px] text-red-400 mt-1">{errors.loan_date}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                Fecha de Devolución
+              </label>
+              {hasNoDueDate ? (
+                <div className="h-[42px] px-3.5 bg-slate-950 border border-slate-800/80 rounded-xl flex items-center text-xs text-amber-400 font-medium">
+                  ♾️ Sin fecha fija (A convenir)
+                </div>
+              ) : (
+                <input
+                  type="date"
+                  value={expectedReturnDate}
+                  onChange={(e) => setExpectedReturnDate(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* TOGGLE SIN FECHA DE VENCIMIENTO */}
+          <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="block text-xs font-medium text-white">
+                ¿Sin fecha de devolución fija?
+              </span>
+              <span className="text-[11px] text-slate-400">
+                El préstamo quedará abierto sin plazo de vencimiento forzado.
+              </span>
+            </div>
             <input
-              type="date"
-              value={loanDate}
-              onChange={(e) => setLoanDate(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-              required
+              type="checkbox"
+              checked={hasNoDueDate}
+              onChange={(e) => setHasNoDueDate(e.target.checked)}
+              className="w-4 h-4 rounded accent-emerald-500 cursor-pointer"
             />
-            {errors.loan_date && (
-              <p className="text-[11px] text-red-400 mt-1">{errors.loan_date}</p>
-            )}
           </div>
 
           {/* NOTAS / MOTIVO */}
@@ -254,7 +335,7 @@ export function LoanForm({
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ej. Préstamo para arreglo del auto o cuota de la facultad"
+              placeholder="Ej. Transferencia para comprar repuesto de auto, efectivo en mano, etc."
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors resize-none"
             />
           </div>
@@ -271,9 +352,17 @@ export function LoanForm({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50"
+              className={`px-5 py-2.5 rounded-xl text-xs font-medium text-slate-950 shadow-lg transition-all disabled:opacity-50 ${
+                isLent
+                  ? 'bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20'
+                  : 'bg-indigo-500 hover:bg-indigo-400 text-white shadow-indigo-600/30'
+              }`}
             >
-              {isSubmitting ? 'Guardando...' : 'Guardar Préstamo'}
+              {isSubmitting
+                ? 'Guardando...'
+                : isLent
+                ? 'Guardar Dinero Prestado'
+                : 'Guardar Préstamo Tomado'}
             </button>
           </div>
         </form>

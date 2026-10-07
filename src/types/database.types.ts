@@ -185,9 +185,11 @@ export type Database = {
           id: string;
           user_id: string;
           lender_person_id: string;
+          loan_type: 'borrowed' | 'lent';
           initial_amount: number;
           currency: string;
           loan_date: string;
+          expected_return_date: string | null;
           status: string;
           notes: string | null;
           created_at: string;
@@ -196,9 +198,11 @@ export type Database = {
           id?: string;
           user_id: string;
           lender_person_id: string;
+          loan_type?: 'borrowed' | 'lent';
           initial_amount: number;
           currency?: string;
           loan_date: string;
+          expected_return_date?: string | null;
           status?: string;
           notes?: string | null;
           created_at?: string;
@@ -207,9 +211,11 @@ export type Database = {
           id?: string;
           user_id?: string;
           lender_person_id?: string;
+          loan_type?: 'borrowed' | 'lent';
           initial_amount?: number;
           currency?: string;
           loan_date?: string;
+          expected_return_date?: string | null;
           status?: string;
           notes?: string | null;
           created_at?: string;

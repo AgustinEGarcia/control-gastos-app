@@ -28,8 +28,10 @@ export default function PrestamosPage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formInitialType, setFormInitialType] = useState<'borrowed' | 'lent'>('lent');
   const [selectedLoanForRepayment, setSelectedLoanForRepayment] = useState<LoanWithDetails | null>(null);
-  const [filterTab, setFilterTab] = useState<'all' | 'ARS' | 'USD' | 'paid_off'>('all');
+  const [typeTab, setTypeTab] = useState<'all' | 'lent' | 'borrowed'>('all');
+  const [currencyFilter, setCurrencyFilter] = useState<'all' | 'ARS' | 'USD' | 'paid_off'>('all');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const supabase = createClient();
@@ -56,20 +58,32 @@ export default function PrestamosPage() {
     loadData();
   }, [loadData]);
 
-  const summary = useMemo(() => calculateLoansSummary(loans), [loans]);
-
-  const filteredLoans = useMemo(() => {
-    if (filterTab === 'ARS') {
-      return loans.filter((l) => l.currency === 'ARS' && l.remaining_balance > 0);
-    }
-    if (filterTab === 'USD') {
-      return loans.filter((l) => l.currency === 'USD' && l.remaining_balance > 0);
-    }
-    if (filterTab === 'paid_off') {
-      return loans.filter((l) => l.remaining_balance <= 0 || l.status === 'paid_off');
-    }
+  // Préstamos filtrados por tipo (presté vs me prestaron)
+  const loansByType = useMemo(() => {
+    if (typeTab === 'lent') return loans.filter((l) => l.loan_type === 'lent');
+    if (typeTab === 'borrowed') return loans.filter((l) => l.loan_type !== 'lent');
     return loans;
-  }, [loans, filterTab]);
+  }, [loans, typeTab]);
+
+  const summary = useMemo(() => calculateLoansSummary(loansByType), [loansByType]);
+
+  // Préstamos con filtro de moneda y estado
+  const filteredLoans = useMemo(() => {
+    let result = loansByType;
+    if (currencyFilter === 'ARS') {
+      result = result.filter((l) => l.currency === 'ARS' && l.remaining_balance > 0);
+    } else if (currencyFilter === 'USD') {
+      result = result.filter((l) => l.currency === 'USD' && l.remaining_balance > 0);
+    } else if (currencyFilter === 'paid_off') {
+      result = result.filter((l) => l.remaining_balance <= 0 || l.status === 'paid_off');
+    }
+    return result;
+  }, [loansByType, currencyFilter]);
+
+  const handleOpenForm = (type: 'borrowed' | 'lent') => {
+    setFormInitialType(type);
+    setIsFormOpen(true);
+  };
 
   const handleCreateLoan = async (input: LoanInput) => {
     const {
@@ -107,6 +121,9 @@ export default function PrestamosPage() {
     return newPerson;
   };
 
+  const lentCount = loans.filter((l) => l.loan_type === 'lent').length;
+  const borrowedCount = loans.filter((l) => l.loan_type !== 'lent').length;
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -116,22 +133,32 @@ export default function PrestamosPage() {
             <div className="flex items-center gap-3">
               <span className="text-2xl">🤝</span>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                Préstamos y Deudas Propias
+                Préstamos Personales y Deudas
               </h1>
             </div>
             <p className="text-sm text-slate-400 mt-1">
-              Control de dinero prestado por familiares o terceros en ARS y USD con amortización de pagos.
+              Control de dinero prestado a terceros (a término abierto) y deudas propias en ARS y USD.
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsFormOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <span>+</span>
-            <span>Nuevo Préstamo</span>
-          </button>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => handleOpenForm('lent')}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-950 bg-emerald-500 hover:bg-emerald-400 shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span>+</span>
+              <span>Prestar Dinero</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleOpenForm('borrowed')}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span>+</span>
+              <span>Me Prestaron</span>
+            </button>
+          </div>
         </div>
 
         {/* MENSAJES DE ERROR */}
@@ -147,27 +174,64 @@ export default function PrestamosPage() {
           </div>
         )}
 
-        {/* CARDS DE RESUMEN METRICO */}
-        <LoanSummaryCards summary={summary} />
-
-        {/* PESTAÑAS DE FILTRO */}
-        <div className="flex items-center gap-2 border-b border-slate-800 pb-4 mb-6 overflow-x-auto">
+        {/* SELECTOR PRINCIPAL: PRESTÉ VS ME PRESTARON */}
+        <div className="flex p-1 bg-slate-900 border border-slate-800 rounded-2xl mb-6 max-w-md">
           <button
             type="button"
-            onClick={() => setFilterTab('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              filterTab === 'all'
-                ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+            onClick={() => setTypeTab('all')}
+            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
+              typeTab === 'all'
+                ? 'bg-slate-800 text-white shadow-sm'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
             Todos ({loans.length})
           </button>
           <button
             type="button"
-            onClick={() => setFilterTab('ARS')}
+            onClick={() => setTypeTab('lent')}
+            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+              typeTab === 'lent'
+                ? 'bg-emerald-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>📤</span> Presté ({lentCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setTypeTab('borrowed')}
+            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+              typeTab === 'borrowed'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>📥</span> Me prestaron ({borrowedCount})
+          </button>
+        </div>
+
+        {/* CARDS DE RESUMEN METRICO */}
+        <LoanSummaryCards summary={summary} />
+
+        {/* SUB-PESTAÑAS DE MONEDA */}
+        <div className="flex items-center gap-2 border-b border-slate-800 pb-4 mb-6 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setCurrencyFilter('all')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              filterTab === 'ARS'
+              currencyFilter === 'all'
+                ? 'bg-slate-800 text-white border border-slate-700'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+            }`}
+          >
+            Todas las divisas ({loansByType.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrencyFilter('ARS')}
+            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+              currencyFilter === 'ARS'
                 ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
                 : 'text-slate-400 hover:text-white hover:bg-slate-900'
             }`}
@@ -176,9 +240,9 @@ export default function PrestamosPage() {
           </button>
           <button
             type="button"
-            onClick={() => setFilterTab('USD')}
+            onClick={() => setCurrencyFilter('USD')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              filterTab === 'USD'
+              currencyFilter === 'USD'
                 ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30'
                 : 'text-slate-400 hover:text-white hover:bg-slate-900'
             }`}
@@ -187,14 +251,14 @@ export default function PrestamosPage() {
           </button>
           <button
             type="button"
-            onClick={() => setFilterTab('paid_off')}
+            onClick={() => setCurrencyFilter('paid_off')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-              filterTab === 'paid_off'
+              currencyFilter === 'paid_off'
                 ? 'bg-slate-800 text-slate-200 border border-slate-700'
                 : 'text-slate-400 hover:text-white hover:bg-slate-900'
             }`}
           >
-            Saldados / Cancelados ({summary.ARS.paidOffCount + summary.USD.paidOffCount})
+            Saldados ({summary.ARS.paidOffCount + summary.USD.paidOffCount})
           </button>
         </div>
 
@@ -215,19 +279,21 @@ export default function PrestamosPage() {
               No hay préstamos para mostrar
             </h3>
             <p className="text-xs text-slate-400 max-w-sm mx-auto mb-6">
-              {filterTab === 'all'
-                ? 'Aún no registraste préstamos ni deudas recibidas. Comienza agregando uno nuevo.'
+              {typeTab === 'lent'
+                ? 'Aún no registraste dinero prestado a terceros.'
+                : typeTab === 'borrowed'
+                ? 'Aún no registraste préstamos que te hayan otorgado a ti.'
                 : 'No se encontraron préstamos con el filtro seleccionado.'}
             </p>
-            {filterTab === 'all' && (
+            <div className="flex justify-center gap-2">
               <button
                 type="button"
-                onClick={() => setIsFormOpen(true)}
-                className="px-4 py-2 rounded-xl text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
+                onClick={() => handleOpenForm('lent')}
+                className="px-4 py-2 rounded-xl text-xs font-medium bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors"
               >
-                + Registrar Primer Préstamo
+                + Registrar Dinero Prestado
               </button>
-            )}
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -247,12 +313,13 @@ export default function PrestamosPage() {
         <LoanForm
           people={people}
           isOpen={isFormOpen}
+          initialType={formInitialType}
           onClose={() => setIsFormOpen(false)}
           onSubmit={handleCreateLoan}
           onCreatePerson={handleCreatePerson}
         />
 
-        {/* MODAL REGISTRAR ABONO */}
+        {/* MODAL REGISTRAR ABONO / COBRO */}
         {selectedLoanForRepayment && (
           <LoanRepaymentModal
             loan={selectedLoanForRepayment}

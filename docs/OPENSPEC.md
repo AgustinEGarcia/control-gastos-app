@@ -70,18 +70,24 @@ CREATE TABLE installments (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- TABLA DE PRÉSTAMOS PERSONALES (ARS / USD)
+-- TABLA DE PRÉSTAMOS PERSONALES (ARS / USD - TOMADOS Y OTORGADOS)
 CREATE TABLE personal_loans (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     lender_person_id UUID REFERENCES people(id) ON DELETE CASCADE,
+    loan_type VARCHAR(20) NOT NULL DEFAULT 'borrowed', -- 'borrowed' (me prestaron) o 'lent' (presté)
     initial_amount DECIMAL(12,2) NOT NULL,
     currency VARCHAR(10) NOT NULL DEFAULT 'ARS',
     loan_date DATE NOT NULL,
+    expected_return_date DATE, -- NULL indica sin fecha fija de devolución / a convenir
     status VARCHAR(20) DEFAULT 'active',
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- MIGRACIÓN RETROACTIVA PARA BASES DE DATOS EXISTENTES:
+-- ALTER TABLE personal_loans ADD COLUMN IF NOT EXISTS loan_type VARCHAR(20) NOT NULL DEFAULT 'borrowed';
+-- ALTER TABLE personal_loans ADD COLUMN IF NOT EXISTS expected_return_date DATE NULL;
 
 -- TABLA DE ABONOS A PRÉSTAMOS
 CREATE TABLE loan_repayments (

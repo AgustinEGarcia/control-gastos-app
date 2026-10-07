@@ -88,6 +88,8 @@ export default function EstadoCuentaPage({ params }: PageProps) {
       ? Math.min(100, Math.round((statement.total_paid / statement.total_debt) * 100))
       : 100;
 
+  const hasDirectLoans = (statement.direct_loans || []).length > 0;
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto space-y-6">
@@ -101,7 +103,7 @@ export default function EstadoCuentaPage({ params }: PageProps) {
             Estado de Cuenta de {statement.person.name}
           </h1>
           <p className="text-xs text-slate-400">
-            Detalle sincronizado en tiempo real de consumos compartidos y pagos acreditados.
+            Detalle sincronizado en tiempo real de consumos compartidos, préstamos directos y pagos acreditados.
           </p>
         </div>
 
@@ -145,7 +147,7 @@ export default function EstadoCuentaPage({ params }: PageProps) {
 
           <div className="grid grid-cols-2 gap-4 border-t border-slate-800/80 pt-4 mt-2 max-w-md mx-auto text-left">
             <div>
-              <span className="text-[11px] text-slate-400 block">Total en Compras:</span>
+              <span className="text-[11px] text-slate-400 block">Deuda Total Inicial:</span>
               <strong className="text-slate-200 text-sm">{formatMoney(statement.total_debt)}</strong>
             </div>
             <div className="text-right">
@@ -155,10 +157,50 @@ export default function EstadoCuentaPage({ params }: PageProps) {
           </div>
         </div>
 
+        {/* DETALLE DE DINERO PRESTADO DIRECTO */}
+        {hasDirectLoans && (
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <span>💵</span> Dinero Prestado Directo (A término abierto)
+              </span>
+              <span className="text-xs text-emerald-400 font-semibold">
+                {statement.direct_loans?.length} préstamos
+              </span>
+            </h2>
+
+            <div className="space-y-3">
+              {statement.direct_loans?.map((loan) => (
+                <div
+                  key={loan.id}
+                  className="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 flex items-center justify-between text-xs"
+                >
+                  <div>
+                    <h3 className="font-semibold text-slate-100">
+                      Entregado el {loan.loan_date} {loan.notes ? `• "${loan.notes}"` : ''}
+                    </h3>
+                    <p className="text-[11px] text-amber-400 mt-0.5">
+                      {loan.expected_return_date ? `Vence: ${loan.expected_return_date}` : '♾️ Sin fecha fija de devolución (A convenir)'}
+                    </p>
+                  </div>
+                  <div className="text-right font-bold text-emerald-400 text-sm">
+                    {formatMoney(Number(loan.remaining_balance))}
+                    <span className="block text-[10px] text-slate-500 font-normal">
+                      de {formatMoney(Number(loan.initial_amount))}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* DETALLE DE COMPRAS ASOCIADAS */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
           <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center justify-between">
-            <span>Compras Asignadas</span>
+            <span className="flex items-center gap-2">
+              <span>💳</span> Compras en Tarjetas Asignadas
+            </span>
             <span className="text-xs text-slate-400 font-normal">
               {statement.transactions?.length || 0} compras
             </span>
@@ -194,7 +236,7 @@ export default function EstadoCuentaPage({ params }: PageProps) {
         {/* HISTORIAL DE COBROS ACREDITADOS */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
           <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center justify-between">
-            <span>Pagos Acreditados</span>
+            <span>Pagos y Abonos Acreditados</span>
             <span className="text-xs text-slate-400 font-normal">
               {statement.payments_received?.length || 0} abonos
             </span>

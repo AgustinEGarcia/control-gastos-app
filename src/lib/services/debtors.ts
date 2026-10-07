@@ -2,6 +2,7 @@ import type { Database } from '@/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Person, TransactionWithDetails } from './transactions';
 import { getTransactions } from './transactions';
+import { getLoans, type LoanWithDetails } from './loans';
 
 export type PaymentReceived = Database['public']['Tables']['payments_received']['Row'];
 
@@ -10,9 +11,12 @@ export interface DebtorAccount {
   total_debt: number;
   total_paid: number;
   remaining_balance: number;
+  card_debt: number;
+  direct_loans_debt: number;
   status: 'pending' | 'paid_off';
   transactions: TransactionWithDetails[];
   payments_received: PaymentReceived[];
+  direct_loans?: LoanWithDetails[];
 }
 
 export interface PaymentReceivedInput {
@@ -34,32 +38,61 @@ export interface DebtorsGlobalSummary {
   activeDebtorsCount: number;
   paidOffDebtorsCount: number;
   totalPeopleCount: number;
+  totalCardPending: number;
+  totalLoansPending: number;
 }
 
 export function calculateDebtorBalance(
   transactions: { total_amount: number }[],
-  payments: { amount: number }[]
+  payments: { amount: number }[],
+  directLoans: { initial_amount: number; total_repaid?: number; remaining_balance?: number }[] = []
 ): {
   totalDebt: number;
   totalPaid: number;
   remainingBalance: number;
+  cardDebt: number;
+  directLoansDebt: number;
   status: 'pending' | 'paid_off';
 } {
-  const totalDebt = Number(
+  const cardOriginal = Number(
     transactions.reduce((acc, curr) => acc + Number(curr.total_amount || 0), 0).toFixed(2)
   );
 
-  const totalPaid = Number(
+  const cardPaid = Number(
     payments.reduce((acc, curr) => acc + Number(curr.amount || 0), 0).toFixed(2)
   );
 
-  const remaining = Number((totalDebt - totalPaid).toFixed(2));
-  const remainingBalance = Math.max(0, remaining);
+  const cardRemaining = Math.max(0, Number((cardOriginal - cardPaid).toFixed(2)));
+
+  const loansOriginal = Number(
+    directLoans.reduce((acc, curr) => acc + Number(curr.initial_amount || 0), 0).toFixed(2)
+  );
+
+  const loansPaid = Number(
+    directLoans.reduce((acc, curr) => acc + Number(curr.total_repaid || 0), 0).toFixed(2)
+  );
+
+  const loansRemaining = Number(
+    directLoans
+      .reduce((acc, curr) => {
+        const rem = curr.remaining_balance !== undefined
+          ? curr.remaining_balance
+          : Math.max(0, Number(curr.initial_amount || 0) - Number(curr.total_repaid || 0));
+        return acc + rem;
+      }, 0)
+      .toFixed(2)
+  );
+
+  const totalDebt = Number((cardOriginal + loansOriginal).toFixed(2));
+  const totalPaid = Number((cardPaid + loansPaid).toFixed(2));
+  const remainingBalance = Number((cardRemaining + loansRemaining).toFixed(2));
 
   return {
     totalDebt,
     totalPaid,
     remainingBalance,
+    cardDebt: cardRemaining,
+    directLoansDebt: loansRemaining,
     status: remainingBalance <= 0 ? 'paid_off' : 'pending',
   };
 }
@@ -99,11 +132,15 @@ export function calculateDebtorsGlobalSummary(
   let totalOriginalDebt = 0;
   let activeDebtorsCount = 0;
   let paidOffDebtorsCount = 0;
+  let totalCardPending = 0;
+  let totalLoansPending = 0;
 
   for (const d of debtors) {
     totalPendingToCollect += d.remaining_balance;
     totalCollected += d.total_paid;
     totalOriginalDebt += d.total_debt;
+    totalCardPending += d.card_debt;
+    totalLoansPending += d.direct_loans_debt;
 
     if (d.status === 'paid_off') {
       paidOffDebtorsCount += 1;
@@ -116,6 +153,8 @@ export function calculateDebtorsGlobalSummary(
     totalPendingToCollect: Number(totalPendingToCollect.toFixed(2)),
     totalCollected: Number(totalCollected.toFixed(2)),
     totalOriginalDebt: Number(totalOriginalDebt.toFixed(2)),
+    totalCardPending: Number(totalCardPending.toFixed(2)),
+    totalLoansPending: Number(totalLoansPending.toFixed(2)),
     activeDebtorsCount,
     paidOffDebtorsCount,
     totalPeopleCount: debtors.length,
@@ -142,7 +181,16 @@ export async function getDebtorsOverview(
   // 2. Obtener transacciones con cuotas
   const transactions = await getTransactions(supabase);
 
-  // 3. Obtener pagos recibidos
+  // 3. Obtener préstamos otorgados (lent) con fallback
+  let lentLoans: LoanWithDetails[] = [];
+  try {
+    const allLoans = await getLoans(supabase);
+    lentLoans = allLoans.filter((l) => l.loan_type === 'lent');
+  } catch {
+    lentLoans = [];
+  }
+
+  // 4. Obtener pagos recibidos
   const { data: payments, error: rError } = await supabase
     .from('payments_received')
     .select('*')
@@ -152,7 +200,7 @@ export async function getDebtorsOverview(
     throw new Error(`Error al obtener cobros recibidos: ${rError.message}`);
   }
 
-  // 4. Consolidar por persona
+  // 5. Consolidar por persona
   const debtorAccounts: DebtorAccount[] = [];
 
   for (const person of people) {
@@ -164,18 +212,25 @@ export async function getDebtorsOverview(
       (p: any) => p.person_id === person.id
     );
 
-    // Solo incluir personas que tengan consumos compartidos o pagos recibidos registrados
-    if (personTransactions.length > 0 || personPayments.length > 0) {
-      const balance = calculateDebtorBalance(personTransactions, personPayments);
+    const personLoans = (lentLoans || []).filter(
+      (l: any) => l.lender_person_id === person.id
+    );
+
+    // Incluir personas que tengan consumos compartidos, préstamos directos o pagos recibidos
+    if (personTransactions.length > 0 || personPayments.length > 0 || personLoans.length > 0) {
+      const balance = calculateDebtorBalance(personTransactions, personPayments, personLoans);
 
       debtorAccounts.push({
         person,
         total_debt: balance.totalDebt,
         total_paid: balance.totalPaid,
         remaining_balance: balance.remainingBalance,
+        card_debt: balance.cardDebt,
+        direct_loans_debt: balance.directLoansDebt,
         status: balance.status,
         transactions: personTransactions,
         payments_received: personPayments,
+        direct_loans: personLoans,
       });
     }
   }
@@ -232,7 +287,6 @@ export async function getPublicDebtorStatement(
   supabase: SupabaseClient<Database>,
   personId: string
 ): Promise<DebtorAccount | null> {
-  // Consulta de persona
   const { data: person, error: pError } = await supabase
     .from('people')
     .select('*')
@@ -243,13 +297,21 @@ export async function getPublicDebtorStatement(
     return null;
   }
 
-  // Consulta de transacciones asociadas
   const allTransactions = await getTransactions(supabase);
   const safeTransactions = allTransactions.filter(
     (t) => t.beneficiary_person_id === personId
   );
 
-  // Consulta de pagos recibidos asociados
+  let personLoans: LoanWithDetails[] = [];
+  try {
+    const allLoans = await getLoans(supabase);
+    personLoans = allLoans.filter(
+      (l) => l.loan_type === 'lent' && l.lender_person_id === personId
+    );
+  } catch {
+    personLoans = [];
+  }
+
   const { data: payments } = await supabase
     .from('payments_received')
     .select('*')
@@ -257,15 +319,18 @@ export async function getPublicDebtorStatement(
     .order('payment_date', { ascending: false });
 
   const safePayments = payments || [];
-  const balance = calculateDebtorBalance(safeTransactions, safePayments);
+  const balance = calculateDebtorBalance(safeTransactions, safePayments, personLoans);
 
   return {
     person,
     total_debt: balance.totalDebt,
     total_paid: balance.totalPaid,
     remaining_balance: balance.remainingBalance,
+    card_debt: balance.cardDebt,
+    direct_loans_debt: balance.directLoansDebt,
     status: balance.status,
     transactions: safeTransactions,
     payments_received: safePayments,
+    direct_loans: personLoans,
   };
 }

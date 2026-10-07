@@ -3,9 +3,13 @@ import type { MonthlyConsolidatedSummary } from '@/lib/services/dashboard';
 
 interface DashboardMetricCardsProps {
   summary: MonthlyConsolidatedSummary;
+  totalLentPending?: number;
 }
 
-export function DashboardMetricCards({ summary }: DashboardMetricCardsProps) {
+export function DashboardMetricCards({
+  summary,
+  totalLentPending = 0,
+}: DashboardMetricCardsProps) {
   const formatMoney = (val: number) => {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
@@ -13,6 +17,8 @@ export function DashboardMetricCards({ summary }: DashboardMetricCardsProps) {
       maximumFractionDigits: 2,
     }).format(val);
   };
+
+  const totalPorCobrarGlobal = summary.totalSharedToCollect + totalLentPending;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -23,7 +29,7 @@ export function DashboardMetricCards({ summary }: DashboardMetricCardsProps) {
           <span className="text-xs font-semibold tracking-wider uppercase text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
             A Pagar de tu Bolsillo
           </span>
-          <span className="text-xs text-slate-400">Total Propio</span>
+          <span className="text-xs text-slate-400">Mes Corriente</span>
         </div>
         <div className="text-3xl sm:text-4xl font-extrabold text-white mb-2 tracking-tight">
           {formatMoney(summary.totalOwnToPay)}
@@ -47,14 +53,22 @@ export function DashboardMetricCards({ summary }: DashboardMetricCardsProps) {
           <span className="text-xs font-semibold tracking-wider uppercase text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
             A Cobrar a Terceros
           </span>
-          <span className="text-xs text-slate-400">Consumos Prestados</span>
+          <span className="text-xs text-slate-400">Total en la Calle</span>
         </div>
         <div className="text-3xl sm:text-4xl font-extrabold text-amber-300 mb-2 tracking-tight">
-          {formatMoney(summary.totalSharedToCollect)}
+          {formatMoney(totalPorCobrarGlobal)}
         </div>
-        <div className="text-xs text-slate-400 border-t border-slate-800/80 pt-3 mt-3 flex items-center justify-between">
-          <span>Compras prestadas en el mes:</span>
-          <span className="text-amber-400 font-medium">Reembolsos de amigos/familia</span>
+        <div className="text-xs text-slate-400 border-t border-slate-800/80 pt-3 mt-3 space-y-1">
+          <div className="flex justify-between">
+            <span>Cuotas compartidas del mes:</span>
+            <strong className="text-slate-200">{formatMoney(summary.totalSharedToCollect)}</strong>
+          </div>
+          {totalLentPending > 0 && (
+            <div className="flex justify-between text-emerald-400">
+              <span>Dinero prestado (a término abierto):</span>
+              <strong>{formatMoney(totalLentPending)}</strong>
+            </div>
+          )}
         </div>
       </div>
 

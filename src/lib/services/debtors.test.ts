@@ -107,6 +107,8 @@ describe('Servicio de Deudores y Estado de Cuenta (Spec 006)', () => {
           total_debt: 80000,
           total_paid: 30000,
           remaining_balance: 50000,
+          card_debt: 20000,
+          direct_loans_debt: 30000,
           status: 'pending',
           transactions: [],
           payments_received: [],
@@ -116,6 +118,8 @@ describe('Servicio de Deudores y Estado de Cuenta (Spec 006)', () => {
           total_debt: 40000,
           total_paid: 40000,
           remaining_balance: 0,
+          card_debt: 0,
+          direct_loans_debt: 0,
           status: 'paid_off',
           transactions: [],
           payments_received: [],
@@ -127,9 +131,27 @@ describe('Servicio de Deudores y Estado de Cuenta (Spec 006)', () => {
       expect(summary.totalOriginalDebt).toBe(120000);
       expect(summary.totalCollected).toBe(70000);
       expect(summary.totalPendingToCollect).toBe(50000);
+      expect(summary.totalCardPending).toBe(20000);
+      expect(summary.totalLoansPending).toBe(30000);
       expect(summary.activeDebtorsCount).toBe(1);
       expect(summary.paidOffDebtorsCount).toBe(1);
       expect(summary.totalPeopleCount).toBe(2);
+    });
+
+    it('debe calcular balance unificado sumando compras con tarjeta y préstamos directos', () => {
+      const transactions = [{ total_amount: 30000 }];
+      const payments = [{ amount: 10000 }];
+      const directLoans = [
+        { initial_amount: 50000, total_repaid: 20000, remaining_balance: 30000 },
+      ];
+
+      const balance = calculateDebtorBalance(transactions, payments, directLoans);
+      expect(balance.cardDebt).toBe(20000);
+      expect(balance.directLoansDebt).toBe(30000);
+      expect(balance.totalDebt).toBe(80000);
+      expect(balance.totalPaid).toBe(30000);
+      expect(balance.remainingBalance).toBe(50000);
+      expect(balance.status).toBe('pending');
     });
   });
 });

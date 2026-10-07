@@ -53,6 +53,8 @@ export function DebtorCard({
     }
   };
 
+  const hasDirectLoans = (debtor.direct_loans || []).length > 0;
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg hover:border-slate-700 transition-all">
       {/* HEADER DE LA TARJETA */}
@@ -70,8 +72,14 @@ export function DebtorCard({
             </span>
 
             <span className="text-[11px] text-slate-400">
-              {debtor.transactions?.length || 0} compras asociadas
+              {debtor.transactions?.length || 0} compras en tarjeta
             </span>
+
+            {hasDirectLoans && (
+              <span className="text-[11px] text-emerald-400 font-medium">
+                • {debtor.direct_loans?.length} préstamos directos
+              </span>
+            )}
           </div>
 
           <h4 className="text-base font-semibold text-white">
@@ -101,18 +109,34 @@ export function DebtorCard({
       <div className="bg-slate-950/60 rounded-xl p-4 border border-slate-800/80 mb-4">
         <div className="flex items-end justify-between mb-2">
           <div>
-            <span className="text-[11px] text-slate-400 block mb-0.5">Pendiente por Cobrar</span>
+            <span className="text-[11px] text-slate-400 block mb-0.5">Pendiente Total a Cobrar</span>
             <span className={`text-2xl font-bold ${isPaidOff ? 'text-slate-400 line-through' : 'text-amber-400'}`}>
               {formatMoney(debtor.remaining_balance)}
             </span>
           </div>
           <div className="text-right">
-            <span className="text-[11px] text-slate-400 block mb-0.5">Consumo Total</span>
+            <span className="text-[11px] text-slate-400 block mb-0.5">Deuda Total Original</span>
             <span className="text-sm font-semibold text-slate-300">
               {formatMoney(debtor.total_debt)}
             </span>
           </div>
         </div>
+
+        {/* DESGLOSE DISCRIMINADO: TARJETAS VS PRÉSTAMOS DIRECTOS */}
+        {(debtor.card_debt > 0 || debtor.direct_loans_debt > 0) && (
+          <div className="flex items-center gap-2 mb-3 pt-2 border-t border-slate-800/60 text-xs">
+            {debtor.card_debt > 0 && (
+              <span className="px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-300 text-[11px]">
+                💳 Tarjetas: {formatMoney(debtor.card_debt)}
+              </span>
+            )}
+            {debtor.direct_loans_debt > 0 && (
+              <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px]">
+                💵 Dinero directo: {formatMoney(debtor.direct_loans_debt)}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* BARRA DE PROGRESO */}
         <div className="w-full bg-slate-800 rounded-full h-2 mb-2 overflow-hidden">
@@ -137,7 +161,7 @@ export function DebtorCard({
           onClick={() => setShowDetails(!showDetails)}
           className="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1 transition-colors"
         >
-          <span>{showDetails ? 'Ocultar detalles' : 'Ver detalle de compras y cobros'}</span>
+          <span>{showDetails ? 'Ocultar detalles' : 'Ver detalle de compras, préstamos y cobros'}</span>
           <span>({debtor.payments_received?.length || 0} cobros)</span>
         </button>
 
@@ -156,10 +180,44 @@ export function DebtorCard({
       {/* DETALLES DESPLEGABLES */}
       {showDetails && (
         <div className="mt-4 pt-3 border-t border-slate-800/60 space-y-4 animate-in fade-in duration-200">
-          {/* COMPRAS ASOCIADAS */}
+          {/* PRÉSTAMOS DIRECTOS */}
+          {hasDirectLoans && (
+            <div>
+              <h5 className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <span>💵</span> Dinero Prestado Directo (Sin fecha límite fija)
+              </h5>
+              <div className="space-y-1.5">
+                {debtor.direct_loans?.map((loan) => (
+                  <div
+                    key={loan.id}
+                    className="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800/60 flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <span className="font-medium text-slate-200 block">
+                        Préstamo del {loan.loan_date} {loan.notes ? `• "${loan.notes}"` : ''}
+                      </span>
+                      <span className="text-[11px] text-amber-400">
+                        {loan.expected_return_date ? `Vence: ${loan.expected_return_date}` : '♾️ A convenir (Sin fecha fija)'}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-semibold text-emerald-400 block">
+                        {formatMoney(Number(loan.remaining_balance))}
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        de {formatMoney(Number(loan.initial_amount))}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* COMPRAS EN TARJETA */}
           <div>
-            <h5 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              Compras en Tarjetas Propias
+            <h5 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <span>💳</span> Compras en Tarjetas Propias
             </h5>
             {debtor.transactions?.length === 0 ? (
               <p className="text-xs text-slate-500">Sin consumos en tarjeta asignados.</p>

@@ -149,9 +149,11 @@ describe('Servicio de Préstamos Personales (Spec 005)', () => {
           id: 'loan-ars-1',
           user_id: 'user-1',
           lender_person_id: 'p-1',
+          loan_type: 'borrowed',
           initial_amount: 100000,
           currency: 'ARS',
           loan_date: '2026-01-01',
+          expected_return_date: null,
           status: 'active',
           notes: null,
           created_at: '',
@@ -165,9 +167,11 @@ describe('Servicio de Préstamos Personales (Spec 005)', () => {
           id: 'loan-ars-2',
           user_id: 'user-1',
           lender_person_id: 'p-2',
+          loan_type: 'borrowed',
           initial_amount: 50000,
           currency: 'ARS',
           loan_date: '2026-02-01',
+          expected_return_date: null,
           status: 'paid_off',
           notes: null,
           created_at: '',
@@ -181,9 +185,11 @@ describe('Servicio de Préstamos Personales (Spec 005)', () => {
           id: 'loan-usd-1',
           user_id: 'user-1',
           lender_person_id: 'p-1',
+          loan_type: 'borrowed',
           initial_amount: 1000,
           currency: 'USD',
           loan_date: '2026-01-10',
+          expected_return_date: null,
           status: 'active',
           notes: null,
           created_at: '',
@@ -213,6 +219,18 @@ describe('Servicio de Préstamos Personales (Spec 005)', () => {
 
       // Conteo global
       expect(summary.totalLoansCount).toBe(3);
+    });
+
+    it('valida préstamo otorgado a un tercero (lent) sin fecha de devolución fija', () => {
+      const res = validateLoanInput({
+        lender_person_id: 'deudor-1',
+        loan_type: 'lent',
+        initial_amount: 80000,
+        currency: 'ARS',
+        loan_date: '2026-04-01',
+        expected_return_date: null, // A término abierto
+      });
+      expect(res.isValid).toBe(true);
     });
   });
 });

@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getRecurringExpenses, type RecurringExpense } from '@/lib/services/recurringExpenses';
 import { getTransactions, type TransactionWithDetails } from '@/lib/services/transactions';
+import { getLoans, type LoanWithDetails } from '@/lib/services/loans';
 import { calculateMonthlyConsolidated, getMonthName } from '@/lib/services/dashboard';
 import { MonthSelector } from '@/components/dashboard/MonthSelector';
 import { DashboardMetricCards } from '@/components/dashboard/DashboardMetricCards';
@@ -16,6 +17,7 @@ export default function DashboardPage() {
 
   const [expenses, setExpenses] = useState<RecurringExpense[]>([]);
   const [transactions, setTransactions] = useState<TransactionWithDetails[]>([]);
+  const [lentLoans, setLentLoans] = useState<LoanWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -25,12 +27,14 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       setErrorMsg(null);
-      const [expData, txData] = await Promise.all([
+      const [expData, txData, loansData] = await Promise.all([
         getRecurringExpenses(supabase),
         getTransactions(supabase),
+        getLoans(supabase, { type: 'lent' }).catch(() => [] as LoanWithDetails[]),
       ]);
       setExpenses(expData);
       setTransactions(txData);
+      setLentLoans(loansData);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error al cargar los datos del dashboard.';
       setErrorMsg(msg);
@@ -46,6 +50,12 @@ export default function DashboardPage() {
   const summary = useMemo(() => {
     return calculateMonthlyConsolidated(expenses, transactions, selectedYear, selectedMonth);
   }, [expenses, transactions, selectedYear, selectedMonth]);
+
+  const totalLentPending = useMemo(() => {
+    return lentLoans
+      .filter((l) => l.loan_type === 'lent' && l.status === 'active')
+      .reduce((sum, l) => sum + (Number(l.remaining_balance) || 0), 0);
+  }, [lentLoans]);
 
   const handleMonthChange = (year: number, month: number) => {
     setSelectedYear(year);
@@ -119,7 +129,7 @@ export default function DashboardPage() {
         ) : (
           <div className="space-y-8">
             {/* CARDS KPIS */}
-            <DashboardMetricCards summary={summary} />
+            <DashboardMetricCards summary={summary} totalLentPending={totalLentPending} />
 
             {/* CRONOGRAMA DE VENCIMIENTOS */}
             <MonthlyDueList
