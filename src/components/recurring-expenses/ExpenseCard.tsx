@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { RecurringExpense } from '@/lib/services/recurringExpenses';
+import type { RecurringExpenseWithMethod } from '@/lib/services/recurringExpenses';
 import { formatCurrency } from './ExpenseSummaryCards';
 
 interface Props {
-  expense: RecurringExpense;
+  expense: RecurringExpenseWithMethod;
   onUpdateActualAmount: (id: string, amount: number | null) => Promise<void>;
   onToggleActive: (id: string, isActive: boolean) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
@@ -90,7 +90,7 @@ export function ExpenseCard({
             <h3 className="font-semibold text-white text-base leading-snug">
               {expense.name}
             </h3>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex flex-wrap items-center gap-2 mt-1">
               <span className="text-xs text-zinc-400 font-medium">
                 {expense.category || 'General'}
               </span>
@@ -98,6 +98,14 @@ export function ExpenseCard({
               <span className="text-xs text-emerald-400 font-mono">
                 Paga día {expense.payment_day}
               </span>
+              {expense.payment_method && (
+                <>
+                  <span className="text-zinc-600">•</span>
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[11px] font-medium border border-zinc-700/60">
+                    💳 {expense.payment_method.name}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import type { PaymentMethod } from '@/lib/services/paymentMethods';
 import {
   type RecurringExpenseInput,
   validateRecurringExpenseInput,
@@ -10,6 +11,7 @@ interface Props {
   onSuccess: (input: RecurringExpenseInput) => Promise<void>;
   onCancel: () => void;
   submitting: boolean;
+  paymentMethods?: PaymentMethod[];
 }
 
 const CATEGORIES = [
@@ -23,12 +25,13 @@ const CATEGORIES = [
   'Otros',
 ];
 
-export function ExpenseForm({ onSuccess, onCancel, submitting }: Props) {
+export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = [] }: Props) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Servicios');
   const [estimatedAmount, setEstimatedAmount] = useState('');
   const [actualAmount, setActualAmount] = useState('');
   const [paymentDay, setPaymentDay] = useState('');
+  const [paymentMethodId, setPaymentMethodId] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
 
@@ -43,6 +46,7 @@ export function ExpenseForm({ onSuccess, onCancel, submitting }: Props) {
       actual_amount: actualAmount ? parseFloat(actualAmount) : null,
       payment_day: parseInt(paymentDay, 10),
       is_active: true,
+      payment_method_id: paymentMethodId ? paymentMethodId : null,
     };
 
     const validation = validateRecurringExpenseInput(input);
@@ -137,6 +141,28 @@ export function ExpenseForm({ onSuccess, onCancel, submitting }: Props) {
               />
               {errors.payment_day && <p className="text-red-400 text-xs mt-1">{errors.payment_day}</p>}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="expense-payment-method">
+              Tarjeta o Débito Automático (Opcional)
+            </label>
+            <select
+              id="expense-payment-method"
+              value={paymentMethodId}
+              onChange={(e) => setPaymentMethodId(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            >
+              <option value="">Sin tarjeta (Débito en cuenta / Efectivo)</option>
+              {paymentMethods.map((pm) => (
+                <option key={pm.id} value={pm.id}>
+                  💳 {pm.name} ({pm.is_own ? 'Propia' : `De: ${pm.owner_name || 'Tercero'}`})
+                </option>
+              ))}
+            </select>
+            <p className="text-[11px] text-zinc-500 mt-1">
+              Si se debita de una tarjeta de crédito (ej. Netflix, seguro), impactará en el resumen mensual.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

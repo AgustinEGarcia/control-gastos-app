@@ -27,7 +27,7 @@ CREATE TABLE people (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- TABLA DE GASTOS FIJOS
+-- TABLA DE GASTOS FIJOS Y SUSCRIPCIONES EN TARJETAS
 CREATE TABLE recurring_expenses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -36,9 +36,13 @@ CREATE TABLE recurring_expenses (
     estimated_amount DECIMAL(12,2) NOT NULL,
     actual_amount DECIMAL(12,2),
     payment_day INT NOT NULL,
+    payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Si ya creaste la tabla anteriormente, ejecuta esta migración:
+-- ALTER TABLE recurring_expenses ADD COLUMN IF NOT EXISTS payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL;
 
 -- TABLA DE TRANSACCIONES / COMPRAS
 CREATE TABLE transactions (

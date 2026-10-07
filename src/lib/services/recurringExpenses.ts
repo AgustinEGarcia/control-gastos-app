@@ -1,8 +1,13 @@
 import type { Database } from '@/types/database.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { PaymentMethod } from './paymentMethods';
 
 export type RecurringExpense = Database['public']['Tables']['recurring_expenses']['Row'];
 export type InsertRecurringExpense = Database['public']['Tables']['recurring_expenses']['Insert'];
+
+export interface RecurringExpenseWithMethod extends RecurringExpense {
+  payment_method: PaymentMethod | null;
+}
 
 export interface RecurringExpenseInput {
   name: string;
@@ -10,6 +15,7 @@ export interface RecurringExpenseInput {
   estimated_amount: number;
   actual_amount?: number | null;
   payment_day: number;
+  payment_method_id?: string | null;
   is_active?: boolean;
 }
 
@@ -61,7 +67,7 @@ export function validateRecurringExpenseInput(input: Partial<RecurringExpenseInp
   };
 }
 
-export function calculateExpenseTotals(expenses: RecurringExpense[]): ExpenseTotals {
+export function calculateExpenseTotals(expenses: (RecurringExpense | RecurringExpenseWithMethod)[]): ExpenseTotals {
   const activeExpenses = expenses.filter((e) => e.is_active);
 
   const totalEstimated = activeExpenses.reduce(
@@ -88,17 +94,42 @@ export function calculateExpenseTotals(expenses: RecurringExpense[]): ExpenseTot
 
 export async function getRecurringExpenses(
   supabase: SupabaseClient<Database>
-): Promise<RecurringExpense[]> {
+): Promise<RecurringExpenseWithMethod[]> {
+  // Intentar traer con relación embebida
   const { data, error } = await supabase
     .from('recurring_expenses')
-    .select('*')
+    .select(`
+      *,
+      payment_method:payment_methods(*)
+    `)
     .order('payment_day', { ascending: true });
 
   if (error) {
-    throw new Error(`Error al obtener gastos fijos: ${error.message}`);
+    // Fallback seguro: si la columna o relación aún se está migrando en postgrest
+    const { data: rawExpenses, error: rawError } = await supabase
+      .from('recurring_expenses')
+      .select('*')
+      .order('payment_day', { ascending: true });
+
+    if (rawError) {
+      throw new Error(`Error al obtener gastos fijos: ${rawError.message}`);
+    }
+
+    const { data: methodsData } = await supabase.from('payment_methods').select('*');
+    const methodsMap = new Map((methodsData || []).map((m: any) => [m.id, m]));
+
+    return (rawExpenses || []).map((exp: any) => ({
+      ...exp,
+      payment_method_id: exp.payment_method_id || null,
+      payment_method: exp.payment_method_id ? methodsMap.get(exp.payment_method_id) || null : null,
+    }));
   }
 
-  return data || [];
+  return (data || []).map((exp: any) => ({
+    ...exp,
+    payment_method_id: exp.payment_method_id || null,
+    payment_method: exp.payment_method || null,
+  }));
 }
 
 export async function createRecurringExpense(
@@ -112,21 +143,35 @@ export async function createRecurringExpense(
     throw new Error(firstError);
   }
 
+  const insertPayload: any = {
+    user_id: userId,
+    name: input.name.trim(),
+    category: input.category?.trim() || 'Servicios',
+    estimated_amount: Number(input.estimated_amount),
+    actual_amount: input.actual_amount !== undefined && input.actual_amount !== null ? Number(input.actual_amount) : null,
+    payment_day: Number(input.payment_day),
+    payment_method_id: input.payment_method_id || null,
+    is_active: input.is_active !== false,
+  };
+
   const { data, error } = await supabase
     .from('recurring_expenses')
-    .insert({
-      user_id: userId,
-      name: input.name.trim(),
-      category: input.category?.trim() || 'Servicios',
-      estimated_amount: Number(input.estimated_amount),
-      actual_amount: input.actual_amount !== undefined && input.actual_amount !== null ? Number(input.actual_amount) : null,
-      payment_day: Number(input.payment_day),
-      is_active: input.is_active !== false,
-    })
+    .insert(insertPayload)
     .select()
     .single();
 
   if (error) {
+    // Si la base remota no tiene la columna aún, reintentar sin ella
+    if (error.message.includes('payment_method_id')) {
+      delete insertPayload.payment_method_id;
+      const { data: retryData, error: retryError } = await supabase
+        .from('recurring_expenses')
+        .insert(insertPayload)
+        .select()
+        .single();
+      if (retryError) throw new Error(`Error al registrar gasto fijo: ${retryError.message}`);
+      return retryData;
+    }
     throw new Error(`Error al registrar gasto fijo: ${error.message}`);
   }
 
@@ -138,7 +183,7 @@ export async function updateRecurringExpense(
   id: string,
   input: Partial<RecurringExpenseInput>
 ): Promise<RecurringExpense> {
-  const updateData: Partial<InsertRecurringExpense> = {};
+  const updateData: any = {};
 
   if (input.name !== undefined) updateData.name = input.name.trim();
   if (input.category !== undefined) updateData.category = input.category?.trim() || null;
@@ -147,6 +192,7 @@ export async function updateRecurringExpense(
     updateData.actual_amount = input.actual_amount !== null ? Number(input.actual_amount) : null;
   }
   if (input.payment_day !== undefined) updateData.payment_day = Number(input.payment_day);
+  if (input.payment_method_id !== undefined) updateData.payment_method_id = input.payment_method_id || null;
   if (input.is_active !== undefined) updateData.is_active = Boolean(input.is_active);
 
   const { data, error } = await supabase
@@ -157,6 +203,17 @@ export async function updateRecurringExpense(
     .single();
 
   if (error) {
+    if (error.message.includes('payment_method_id')) {
+      delete updateData.payment_method_id;
+      const { data: retryData, error: retryError } = await supabase
+        .from('recurring_expenses')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+      if (retryError) throw new Error(`Error al actualizar gasto fijo: ${retryError.message}`);
+      return retryData;
+    }
     throw new Error(`Error al actualizar gasto fijo: ${error.message}`);
   }
 

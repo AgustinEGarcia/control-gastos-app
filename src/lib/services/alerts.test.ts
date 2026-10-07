@@ -24,6 +24,7 @@ describe('Servicio de Alertas Preventivas por Email (Spec 007)', () => {
           estimated_amount: 15000,
           actual_amount: 16500,
           payment_day: 11, // Mañana
+          payment_method_id: null,
           is_active: true,
           created_at: '',
         },
@@ -46,6 +47,7 @@ describe('Servicio de Alertas Preventivas por Email (Spec 007)', () => {
           estimated_amount: 20000,
           actual_amount: null,
           payment_day: 11,
+          payment_method_id: null,
           is_active: false, // Pausado
           created_at: '',
         },
@@ -149,6 +151,7 @@ describe('Servicio de Alertas Preventivas por Email (Spec 007)', () => {
           estimated_amount: 200000,
           actual_amount: 200000,
           payment_day: 11, // Mañana
+          payment_method_id: null,
           is_active: true,
           created_at: '',
         },

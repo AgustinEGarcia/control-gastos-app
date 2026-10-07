@@ -13,10 +13,23 @@ describe('validateRecurringExpenseInput', () => {
       estimated_amount: 350000,
       actual_amount: 350000,
       payment_day: 10,
+      payment_method_id: 'pm-visa-123',
     };
     const result = validateRecurringExpenseInput(input);
     expect(result.isValid).toBe(true);
     expect(result.errors).toEqual({});
+  });
+
+  it('permite gastos fijos sin tarjeta asignada (payment_method_id null o undefined)', () => {
+    const input = {
+      name: 'Expensas Efectivo',
+      category: 'Vivienda',
+      estimated_amount: 45000,
+      payment_day: 12,
+      payment_method_id: null,
+    };
+    const result = validateRecurringExpenseInput(input);
+    expect(result.isValid).toBe(true);
   });
 
   it('falla si el nombre está vacío', () => {
@@ -100,6 +113,7 @@ describe('calculateExpenseTotals', () => {
         estimated_amount: 200000,
         actual_amount: 220000, // +20.000
         payment_day: 5,
+        payment_method_id: null,
         is_active: true,
         created_at: '',
       },
@@ -111,6 +125,7 @@ describe('calculateExpenseTotals', () => {
         estimated_amount: 25000,
         actual_amount: 23000, // -2.000
         payment_day: 10,
+        payment_method_id: null,
         is_active: true,
         created_at: '',
       },
@@ -122,6 +137,7 @@ describe('calculateExpenseTotals', () => {
         estimated_amount: 15000,
         actual_amount: 15000,
         payment_day: 1,
+        payment_method_id: null,
         is_active: false, // Inactivo, debe ignorarse en los totales activos
         created_at: '',
       },
@@ -133,6 +149,7 @@ describe('calculateExpenseTotals', () => {
         estimated_amount: 30000,
         actual_amount: null, // Sin factura aún, toma estimado
         payment_day: 15,
+        payment_method_id: null,
         is_active: true,
         created_at: '',
       },

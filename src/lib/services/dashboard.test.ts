@@ -23,6 +23,7 @@ describe('Servicio de Dashboard Consolidado Mensual (Spec 008)', () => {
         estimated_amount: 180000,
         actual_amount: 180000, // Marcado con factura
         payment_day: 10,
+        payment_method_id: null,
         is_active: true,
         created_at: '',
       },
@@ -34,6 +35,7 @@ describe('Servicio de Dashboard Consolidado Mensual (Spec 008)', () => {
         estimated_amount: 5000,
         actual_amount: null,
         payment_day: 15,
+        payment_method_id: null,
         is_active: false, // Inactivo -> debe ignorarse
         created_at: '',
       },
@@ -149,6 +151,7 @@ describe('Servicio de Dashboard Consolidado Mensual (Spec 008)', () => {
         estimated_amount: 10000,
         actual_amount: null,
         payment_day: 31, // Día 31
+        payment_method_id: null,
         is_active: true,
         created_at: '',
       },

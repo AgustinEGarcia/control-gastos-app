@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import {
-  type RecurringExpense,
+  type RecurringExpenseWithMethod,
   type RecurringExpenseInput,
   getRecurringExpenses,
   createRecurringExpense,
@@ -11,12 +11,17 @@ import {
   deleteRecurringExpense,
   calculateExpenseTotals,
 } from '@/lib/services/recurringExpenses';
+import {
+  type PaymentMethod,
+  getPaymentMethods,
+} from '@/lib/services/paymentMethods';
 import { ExpenseSummaryCards } from '@/components/recurring-expenses/ExpenseSummaryCards';
 import { ExpenseCard } from '@/components/recurring-expenses/ExpenseCard';
 import { ExpenseForm } from '@/components/recurring-expenses/ExpenseForm';
 
 export default function GastosRecurrentesPage() {
-  const [expenses, setExpenses] = useState<RecurringExpense[]>([]);
+  const [expenses, setExpenses] = useState<RecurringExpenseWithMethod[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -29,8 +34,12 @@ export default function GastosRecurrentesPage() {
     try {
       setLoading(true);
       setErrorMsg(null);
-      const data = await getRecurringExpenses(supabase);
-      setExpenses(data);
+      const [expenseData, methodsData] = await Promise.all([
+        getRecurringExpenses(supabase),
+        getPaymentMethods(supabase),
+      ]);
+      setExpenses(expenseData);
+      setPaymentMethods(methodsData);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al cargar los gastos fijos.';
       setErrorMsg(message);
@@ -207,6 +216,7 @@ export default function GastosRecurrentesPage() {
           onSuccess={handleCreate}
           onCancel={() => setIsFormOpen(false)}
           submitting={submitting}
+          paymentMethods={paymentMethods}
         />
       )}
     </div>

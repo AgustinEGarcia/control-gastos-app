@@ -78,6 +78,7 @@ export type Database = {
           estimated_amount: number;
           actual_amount: number | null;
           payment_day: number;
+          payment_method_id: string | null;
           is_active: boolean;
           created_at: string;
         };
@@ -89,6 +90,7 @@ export type Database = {
           estimated_amount: number;
           actual_amount?: number | null;
           payment_day: number;
+          payment_method_id?: string | null;
           is_active?: boolean;
           created_at?: string;
         };
@@ -100,6 +102,7 @@ export type Database = {
           estimated_amount?: number;
           actual_amount?: number | null;
           payment_day?: number;
+          payment_method_id?: string | null;
           is_active?: boolean;
           created_at?: string;
         };

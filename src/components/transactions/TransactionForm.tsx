@@ -8,27 +8,46 @@ import {
   validateTransactionInput,
   generateInstallmentSchedule,
 } from '@/lib/services/transactions';
+import {
+  type RecurringExpenseInput,
+  validateRecurringExpenseInput,
+} from '@/lib/services/recurringExpenses';
 import { formatCurrency } from '@/components/recurring-expenses/ExpenseSummaryCards';
 
 interface Props {
   paymentMethods: PaymentMethod[];
   people: Person[];
   onSuccess: (input: TransactionInput) => Promise<void>;
+  onCreateRecurringExpense?: (input: RecurringExpenseInput) => Promise<void>;
   onCreatePerson: (name: string, email: string | null) => Promise<Person>;
   onCancel: () => void;
   submitting: boolean;
 }
 
+const RECURRING_CATEGORIES = [
+  'Suscripciones',
+  'Servicios',
+  'Seguros',
+  'Salud',
+  'Educación',
+  'Otros',
+];
+
 export function TransactionForm({
   paymentMethods,
   people,
   onSuccess,
+  onCreateRecurringExpense,
   onCreatePerson,
   onCancel,
   submitting,
 }: Props) {
   const today = new Date().toISOString().split('T')[0];
 
+  // Modo del formulario: Cuotas o Suscripción permanente
+  const [mode, setMode] = useState<'installment' | 'subscription'>('installment');
+
+  // Estados de Compra en Cuotas
   const [description, setDescription] = useState('');
   const [totalAmount, setTotalAmount] = useState('');
   const [installmentsCount, setInstallmentsCount] = useState('1');
@@ -37,6 +56,13 @@ export function TransactionForm({
   const [paymentMethodId, setPaymentMethodId] = useState<string>('');
   const [isShared, setIsShared] = useState(false);
   const [selectedPersonId, setSelectedPersonId] = useState<string>('');
+
+  // Estados de Suscripción / Cargo Fijo
+  const [subName, setSubName] = useState('');
+  const [subCategory, setSubCategory] = useState('Suscripciones');
+  const [subAmount, setSubAmount] = useState('');
+  const [subDay, setSubDay] = useState('');
+  const [subPaymentMethodId, setSubPaymentMethodId] = useState<string>('');
 
   // Estado para crear persona al vuelo
   const [isAddingPerson, setIsAddingPerson] = useState(false);
@@ -76,6 +102,37 @@ export function TransactionForm({
     e.preventDefault();
     setGeneralError(null);
 
+    if (mode === 'subscription') {
+      const input: RecurringExpenseInput = {
+        name: subName,
+        category: subCategory,
+        estimated_amount: parseFloat(subAmount),
+        actual_amount: null,
+        payment_day: parseInt(subDay, 10),
+        is_active: true,
+        payment_method_id: subPaymentMethodId ? subPaymentMethodId : null,
+      };
+
+      const validation = validateRecurringExpenseInput(input);
+      if (!validation.isValid) {
+        setErrors(validation.errors);
+        return;
+      }
+
+      try {
+        if (onCreateRecurringExpense) {
+          await onCreateRecurringExpense(input);
+        } else {
+          throw new Error('Función para registrar suscripción no configurada.');
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Error al guardar suscripción.';
+        setGeneralError(msg);
+      }
+      return;
+    }
+
+    // Modo Compra en Cuotas
     const input: TransactionInput = {
       description,
       total_amount: parseFloat(totalAmount),
@@ -111,13 +168,49 @@ export function TransactionForm({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="w-full max-w-lg rounded-2xl bg-zinc-900 border border-zinc-800 p-6 shadow-2xl my-8 animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-5">
-          <h2 className="text-lg font-bold text-white">Registrar Compra / Financiación</h2>
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-4">
+          <h2 className="text-lg font-bold text-white">
+            {mode === 'installment' ? 'Registrar Compra / Financiación' : 'Registrar Cargo Fijo / Suscripción'}
+          </h2>
           <button
             onClick={onCancel}
             className="text-zinc-400 hover:text-white transition-colors text-sm p-1"
           >
             ✕
+          </button>
+        </div>
+
+        {/* Selector de Tipo de Operación: Cuotas vs Suscripción */}
+        <div className="flex p-1 bg-zinc-800/80 rounded-xl mb-5 border border-zinc-700/50">
+          <button
+            type="button"
+            onClick={() => {
+              setMode('installment');
+              setErrors({});
+              setGeneralError(null);
+            }}
+            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+              mode === 'installment'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <span>💳</span> Compra en Cuotas (1-60)
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode('subscription');
+              setErrors({});
+              setGeneralError(null);
+            }}
+            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+              mode === 'subscription'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <span>🔄</span> Cargo Permanente en Tarjeta
           </button>
         </div>
 
@@ -128,207 +221,318 @@ export function TransactionForm({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-desc">
-              Descripción de la Compra *
-            </label>
-            <input
-              id="tx-desc"
-              type="text"
-              required
-              placeholder="Ej: Celular Samsung, Pasajes, Supermercado"
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                if (errors.description) setErrors((prev) => ({ ...prev, description: '' }));
-              }}
-              className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-            />
-            {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description}</p>}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-amount">
-                Monto Total ($) *
-              </label>
-              <input
-                id="tx-amount"
-                type="number"
-                step="0.01"
-                min={0.01}
-                required
-                placeholder="Ej: 120000"
-                value={totalAmount}
-                onChange={(e) => {
-                  setTotalAmount(e.target.value);
-                  if (errors.total_amount) setErrors((prev) => ({ ...prev, total_amount: '' }));
-                }}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-              />
-              {errors.total_amount && <p className="text-red-400 text-xs mt-1">{errors.total_amount}</p>}
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-installments">
-                Cuotas *
-              </label>
-              <input
-                id="tx-installments"
-                type="number"
-                min={1}
-                max={60}
-                required
-                value={installmentsCount}
-                onChange={(e) => {
-                  setInstallmentsCount(e.target.value);
-                  if (errors.installments_count) setErrors((prev) => ({ ...prev, installments_count: '' }));
-                }}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-              />
-              {errors.installments_count && <p className="text-red-400 text-xs mt-1">{errors.installments_count}</p>}
-            </div>
-          </div>
-
-          {/* Vista previa del valor de la cuota */}
-          {previewInstallments.length > 0 && (
-            <div className="p-3 rounded-xl bg-zinc-800/40 border border-zinc-800 text-xs flex items-center justify-between">
-              <span className="text-zinc-400">Plan de cuotas:</span>
-              <span className="font-mono text-emerald-400 font-semibold">
-                {previewInstallments.length} {previewInstallments.length === 1 ? 'pago' : 'cuotas'} de{' '}
-                {formatCurrency(previewInstallments[0].amount)}
-              </span>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-method">
-              Tarjeta o Método de Pago
-            </label>
-            <select
-              id="tx-method"
-              value={paymentMethodId}
-              onChange={(e) => setPaymentMethodId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-            >
-              <option value="">Sin método asignado / Efectivo</option>
-              {paymentMethods.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ({m.is_own ? 'Propia' : `De: ${m.owner_name}`})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-purchase-date">
-                Fecha de Compra *
-              </label>
-              <input
-                id="tx-purchase-date"
-                type="date"
-                required
-                value={purchaseDate}
-                onChange={(e) => setPurchaseDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-first-inst">
-                Primer Vencimiento *
-              </label>
-              <input
-                id="tx-first-inst"
-                type="date"
-                required
-                value={firstInstallmentDate}
-                onChange={(e) => setFirstInstallmentDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-              />
-            </div>
-          </div>
-
-          {/* Sección de Consumo Prestado a Tercero */}
-          <div className="p-4 rounded-xl bg-zinc-800/50 border border-zinc-800">
-            <div className="flex items-center justify-between">
+          {mode === 'subscription' ? (
+            /* Modo Suscripción Permanente en Tarjeta */
+            <>
               <div>
-                <span className="block text-xs font-semibold text-white">
-                  ¿Es una compra prestada a un tercero?
-                </span>
-                <span className="text-[11px] text-zinc-400">
-                  Separar para controlar lo que te deben cobrar.
-                </span>
-              </div>
-              <input
-                type="checkbox"
-                checked={isShared}
-                onChange={(e) => setIsShared(e.target.checked)}
-                className="w-4 h-4 rounded accent-emerald-500 cursor-pointer"
-              />
-            </div>
-
-            {isShared && (
-              <div className="mt-4 pt-3 border-t border-zinc-800">
-                <label className="block text-xs font-medium text-zinc-300 mb-1.5">
-                  ¿A quién le compraste esto? *
+                <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="sub-name">
+                  Servicio o Suscripción *
                 </label>
-                <div className="flex gap-2">
-                  <select
-                    value={selectedPersonId}
-                    onChange={(e) => {
-                      setSelectedPersonId(e.target.value);
-                      if (errors.person) setErrors((prev) => ({ ...prev, person: '' }));
-                    }}
-                    className="flex-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                  >
-                    <option value="">Seleccionar persona...</option>
-                    {people.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingPerson(true)}
-                    className="px-3 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium transition-colors"
-                  >
-                    + Persona
-                  </button>
-                </div>
-                {errors.person && <p className="text-red-400 text-xs mt-1">{errors.person}</p>}
+                <input
+                  id="sub-name"
+                  type="text"
+                  required
+                  placeholder="Ej: Netflix, Spotify, iCloud, Seguro Tarjeta"
+                  value={subName}
+                  onChange={(e) => {
+                    setSubName(e.target.value);
+                    if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
+                  }}
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                />
+                {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+              </div>
 
-                {isAddingPerson && (
-                  <div className="mt-3 p-3 rounded-lg bg-zinc-800/80 border border-zinc-700 flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Nombre de la persona (ej. Papá)"
-                      value={newPersonName}
-                      onChange={(e) => setNewPersonName(e.target.value)}
-                      className="flex-1 px-2.5 py-1.5 rounded bg-zinc-900 border border-zinc-700 text-white text-xs"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleCreateNewPerson}
-                      disabled={creatingPerson}
-                      className="px-3 py-1.5 rounded bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold"
-                    >
-                      {creatingPerson ? '...' : 'Crear'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsAddingPerson(false)}
-                      className="px-2 py-1.5 rounded bg-zinc-700 text-zinc-300 text-xs"
-                    >
-                      ✕
-                    </button>
+              <div>
+                <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="sub-method">
+                  Tarjeta donde se debita *
+                </label>
+                <select
+                  id="sub-method"
+                  value={subPaymentMethodId}
+                  onChange={(e) => setSubPaymentMethodId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                >
+                  <option value="">Selecciona tarjeta (o débito en cuenta)</option>
+                  {paymentMethods.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      💳 {m.name} ({m.is_own ? 'Propia' : `De: ${m.owner_name || 'Tercero'}`})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-zinc-500 mt-1">
+                  Se computará como gasto fijo todos los meses en el resumen de esta tarjeta.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="sub-amount">
+                    Monto Mensual ($) *
+                  </label>
+                  <input
+                    id="sub-amount"
+                    type="number"
+                    step="0.01"
+                    min={0.01}
+                    required
+                    placeholder="Ej: 8500"
+                    value={subAmount}
+                    onChange={(e) => {
+                      setSubAmount(e.target.value);
+                      if (errors.estimated_amount) setErrors((prev) => ({ ...prev, estimated_amount: '' }));
+                    }}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  />
+                  {errors.estimated_amount && <p className="text-red-400 text-xs mt-1">{errors.estimated_amount}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="sub-day">
+                    Día de Débito (1 a 31) *
+                  </label>
+                  <input
+                    id="sub-day"
+                    type="number"
+                    min={1}
+                    max={31}
+                    required
+                    placeholder="Ej: 10"
+                    value={subDay}
+                    onChange={(e) => {
+                      setSubDay(e.target.value);
+                      if (errors.payment_day) setErrors((prev) => ({ ...prev, payment_day: '' }));
+                    }}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  />
+                  {errors.payment_day && <p className="text-red-400 text-xs mt-1">{errors.payment_day}</p>}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="sub-category">
+                  Categoría
+                </label>
+                <select
+                  id="sub-category"
+                  value={subCategory}
+                  onChange={(e) => setSubCategory(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                >
+                  {RECURRING_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          ) : (
+            /* Modo Compra en Cuotas Finitas */
+            <>
+              <div>
+                <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-desc">
+                  Descripción de la Compra *
+                </label>
+                <input
+                  id="tx-desc"
+                  type="text"
+                  required
+                  placeholder="Ej: Celular Samsung, Pasajes, Supermercado"
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    if (errors.description) setErrors((prev) => ({ ...prev, description: '' }));
+                  }}
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                />
+                {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description}</p>}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-amount">
+                    Monto Total ($) *
+                  </label>
+                  <input
+                    id="tx-amount"
+                    type="number"
+                    step="0.01"
+                    min={0.01}
+                    required
+                    placeholder="Ej: 120000"
+                    value={totalAmount}
+                    onChange={(e) => {
+                      setTotalAmount(e.target.value);
+                      if (errors.total_amount) setErrors((prev) => ({ ...prev, total_amount: '' }));
+                    }}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  />
+                  {errors.total_amount && <p className="text-red-400 text-xs mt-1">{errors.total_amount}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-installments">
+                    Cuotas (1 a 60) *
+                  </label>
+                  <input
+                    id="tx-installments"
+                    type="number"
+                    min={1}
+                    max={60}
+                    required
+                    value={installmentsCount}
+                    onChange={(e) => {
+                      setInstallmentsCount(e.target.value);
+                      if (errors.installments_count) setErrors((prev) => ({ ...prev, installments_count: '' }));
+                    }}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  />
+                  {errors.installments_count && <p className="text-red-400 text-xs mt-1">{errors.installments_count}</p>}
+                </div>
+              </div>
+
+              {/* Vista previa del valor de la cuota */}
+              {previewInstallments.length > 0 && (
+                <div className="p-3 rounded-xl bg-zinc-800/40 border border-zinc-800 text-xs flex items-center justify-between">
+                  <span className="text-zinc-400">Plan de cuotas:</span>
+                  <span className="font-mono text-emerald-400 font-semibold">
+                    {previewInstallments.length} {previewInstallments.length === 1 ? 'pago' : 'cuotas'} de{' '}
+                    {formatCurrency(previewInstallments[0].amount)}
+                  </span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-method">
+                  Tarjeta o Método de Pago
+                </label>
+                <select
+                  id="tx-method"
+                  value={paymentMethodId}
+                  onChange={(e) => setPaymentMethodId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                >
+                  <option value="">Sin método asignado / Efectivo</option>
+                  {paymentMethods.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.is_own ? 'Propia' : `De: ${m.owner_name}`})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-purchase-date">
+                    Fecha de Compra *
+                  </label>
+                  <input
+                    id="tx-purchase-date"
+                    type="date"
+                    required
+                    value={purchaseDate}
+                    onChange={(e) => setPurchaseDate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-first-inst">
+                    Primer Vencimiento *
+                  </label>
+                  <input
+                    id="tx-first-inst"
+                    type="date"
+                    required
+                    value={firstInstallmentDate}
+                    onChange={(e) => setFirstInstallmentDate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  />
+                </div>
+              </div>
+
+              {/* Sección de Consumo Prestado a Tercero */}
+              <div className="p-4 rounded-xl bg-zinc-800/50 border border-zinc-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="block text-xs font-semibold text-white">
+                      ¿Es una compra prestada a un tercero?
+                    </span>
+                    <span className="text-[11px] text-zinc-400">
+                      Separar para controlar lo que te deben cobrar.
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isShared}
+                    onChange={(e) => setIsShared(e.target.checked)}
+                    className="w-4 h-4 rounded accent-emerald-500 cursor-pointer"
+                  />
+                </div>
+
+                {isShared && (
+                  <div className="mt-4 pt-3 border-t border-zinc-800">
+                    <label className="block text-xs font-medium text-zinc-300 mb-1.5">
+                      ¿A quién le compraste esto? *
+                    </label>
+                    <div className="flex gap-2">
+                      <select
+                        value={selectedPersonId}
+                        onChange={(e) => {
+                          setSelectedPersonId(e.target.value);
+                          if (errors.person) setErrors((prev) => ({ ...prev, person: '' }));
+                        }}
+                        className="flex-1 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      >
+                        <option value="">Seleccionar persona...</option>
+                        {people.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingPerson(true)}
+                        className="px-3 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-medium transition-colors"
+                      >
+                        + Persona
+                      </button>
+                    </div>
+                    {errors.person && <p className="text-red-400 text-xs mt-1">{errors.person}</p>}
+
+                    {isAddingPerson && (
+                      <div className="mt-3 p-3 rounded-lg bg-zinc-800/80 border border-zinc-700 flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Nombre de la persona (ej. Papá)"
+                          value={newPersonName}
+                          onChange={(e) => setNewPersonName(e.target.value)}
+                          className="flex-1 px-2.5 py-1.5 rounded bg-zinc-900 border border-zinc-700 text-white text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCreateNewPerson}
+                          disabled={creatingPerson}
+                          className="px-3 py-1.5 rounded bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold"
+                        >
+                          {creatingPerson ? '...' : 'Crear'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingPerson(false)}
+                          className="px-2 py-1.5 rounded bg-zinc-700 text-zinc-300 text-xs"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
+            </>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800 mt-6">
             <button
@@ -343,7 +547,11 @@ export function TransactionForm({
               disabled={submitting}
               className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-semibold transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-2"
             >
-              {submitting ? 'Guardando compra...' : 'Registrar Compra'}
+              {submitting
+                ? 'Guardando...'
+                : mode === 'subscription'
+                ? 'Registrar Suscripción'
+                : 'Registrar Compra'}
             </button>
           </div>
         </form>

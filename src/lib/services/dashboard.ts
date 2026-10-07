@@ -1,4 +1,4 @@
-import type { RecurringExpense } from './recurringExpenses';
+import type { RecurringExpense, RecurringExpenseWithMethod } from './recurringExpenses';
 import type { TransactionWithDetails } from './transactions';
 
 export interface MonthlyDueItem {
@@ -29,6 +29,14 @@ export interface MonthlyConsolidatedSummary {
   items: MonthlyDueItem[];
 }
 
+export interface CardCommitmentsSummary {
+  paymentMethodId: string;
+  totalInstallments: number;
+  totalRecurring: number;
+  totalToPay: number;
+  recurringExpenses: RecurringExpenseWithMethod[];
+}
+
 export const MONTH_NAMES_ES = [
   'Enero',
   'Febrero',
@@ -49,7 +57,7 @@ export function getMonthName(monthNumber: number): string {
 }
 
 export function calculateMonthlyConsolidated(
-  expenses: RecurringExpense[],
+  expenses: (RecurringExpense | RecurringExpenseWithMethod)[],
   transactions: TransactionWithDetails[],
   year: number,
   month: number
@@ -72,6 +80,11 @@ export function calculateMonthlyConsolidated(
 
     totalRecurring += amount;
 
+    const methodDetail =
+      'payment_method' in exp && exp.payment_method?.name
+        ? ` • 💳 ${exp.payment_method.name}`
+        : '';
+
     items.push({
       id: `exp-${exp.id}`,
       title: exp.name,
@@ -81,7 +94,7 @@ export function calculateMonthlyConsolidated(
       fullDate,
       // Consideramos pagado si ya se cargó monto real facturado
       isPaid: exp.actual_amount !== null && exp.actual_amount !== undefined,
-      details: exp.category || 'Gasto Fijo Mensual',
+      details: `${exp.category || 'Gasto Fijo Mensual'}${methodDetail}`,
       beneficiaryName: null,
     });
   }
@@ -165,5 +178,43 @@ export function calculateMonthlyConsolidated(
     paidCommitmentsCount,
     percentageCompleted,
     items,
+  };
+}
+
+export function calculateCardMonthlyCommitments(
+  paymentMethodId: string,
+  expenses: (RecurringExpense | RecurringExpenseWithMethod)[],
+  transactions: TransactionWithDetails[],
+  year: number,
+  month: number
+): CardCommitmentsSummary {
+  let totalInstallments = 0;
+  for (const tx of transactions) {
+    if (tx.payment_method_id !== paymentMethodId) continue;
+    for (const inst of tx.installments || []) {
+      if (!inst.due_date) continue;
+      const [instYear, instMonth] = inst.due_date.split('-').map(Number);
+      if (instYear === year && instMonth === month) {
+        totalInstallments += Number(inst.amount);
+      }
+    }
+  }
+
+  const cardExpenses = expenses.filter(
+    (e): e is RecurringExpenseWithMethod =>
+      Boolean(e.is_active && e.payment_method_id === paymentMethodId)
+  );
+
+  let totalRecurring = 0;
+  for (const exp of cardExpenses) {
+    totalRecurring += Number(exp.actual_amount ?? exp.estimated_amount);
+  }
+
+  return {
+    paymentMethodId,
+    totalInstallments: Number(totalInstallments.toFixed(2)),
+    totalRecurring: Number(totalRecurring.toFixed(2)),
+    totalToPay: Number((totalInstallments + totalRecurring).toFixed(2)),
+    recurringExpenses: cardExpenses,
   };
 }

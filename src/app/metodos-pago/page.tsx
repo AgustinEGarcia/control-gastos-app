@@ -9,11 +9,16 @@ import {
   createPaymentMethod,
   deletePaymentMethod,
 } from '@/lib/services/paymentMethods';
+import {
+  type RecurringExpenseWithMethod,
+  getRecurringExpenses,
+} from '@/lib/services/recurringExpenses';
 import { PaymentMethodCard } from '@/components/payment-methods/PaymentMethodCard';
 import { PaymentMethodForm } from '@/components/payment-methods/PaymentMethodForm';
 
 export default function MetodosPagoPage() {
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
+  const [expenses, setExpenses] = useState<RecurringExpenseWithMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -26,8 +31,12 @@ export default function MetodosPagoPage() {
     try {
       setLoading(true);
       setErrorMsg(null);
-      const data = await getPaymentMethods(supabase);
-      setMethods(data);
+      const [methodsData, expensesData] = await Promise.all([
+        getPaymentMethods(supabase),
+        getRecurringExpenses(supabase),
+      ]);
+      setMethods(methodsData);
+      setExpenses(expensesData);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al cargar los métodos de pago.';
       setErrorMsg(message);
@@ -142,14 +151,27 @@ export default function MetodosPagoPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {methods.map((method) => (
-            <PaymentMethodCard
-              key={method.id}
-              method={method}
-              onDelete={handleDelete}
-              deleting={deletingId === method.id}
-            />
-          ))}
+          {methods.map((method) => {
+            const cardExpenses = expenses.filter(
+              (e) => e.is_active && e.payment_method_id === method.id
+            );
+            const count = cardExpenses.length;
+            const total = cardExpenses.reduce(
+              (acc, curr) => acc + Number(curr.actual_amount ?? curr.estimated_amount),
+              0
+            );
+
+            return (
+              <PaymentMethodCard
+                key={method.id}
+                method={method}
+                onDelete={handleDelete}
+                deleting={deletingId === method.id}
+                recurringCount={count}
+                recurringTotal={total}
+              />
+            );
+          })}
         </div>
       )}
 

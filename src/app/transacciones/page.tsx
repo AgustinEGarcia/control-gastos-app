@@ -18,6 +18,10 @@ import {
   type PaymentMethod,
   getPaymentMethods,
 } from '@/lib/services/paymentMethods';
+import {
+  type RecurringExpenseInput,
+  createRecurringExpense,
+} from '@/lib/services/recurringExpenses';
 import { TransactionSummaryCards } from '@/components/transactions/TransactionSummaryCards';
 import { TransactionCard } from '@/components/transactions/TransactionCard';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
@@ -84,6 +88,24 @@ export default function TransaccionesPage() {
       }
 
       await createTransactionWithInstallments(supabase, input, user.id);
+      setIsFormOpen(false);
+      await loadData();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateRecurring = async (input: RecurringExpenseInput) => {
+    setSubmitting(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Debes iniciar sesión para registrar una suscripción.');
+      }
+
+      await createRecurringExpense(supabase, input, user.id);
       setIsFormOpen(false);
       await loadData();
     } finally {
@@ -240,6 +262,7 @@ export default function TransaccionesPage() {
           paymentMethods={paymentMethods}
           people={people}
           onSuccess={handleCreateTransaction}
+          onCreateRecurringExpense={handleCreateRecurring}
           onCreatePerson={handleCreatePerson}
           onCancel={() => setIsFormOpen(false)}
           submitting={submitting}
