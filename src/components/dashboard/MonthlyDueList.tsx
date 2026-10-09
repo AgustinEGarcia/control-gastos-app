@@ -7,6 +7,7 @@ interface MonthlyDueListProps {
   items: MonthlyDueItem[];
   monthName: string;
   onTogglePaid?: (item: MonthlyDueItem) => Promise<void> | void;
+  onEditVariable?: () => void;
   togglingId?: string | null;
 }
 
@@ -14,9 +15,10 @@ export function MonthlyDueList({
   items,
   monthName,
   onTogglePaid,
+  onEditVariable,
   togglingId,
 }: MonthlyDueListProps) {
-  const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'recurring' | 'own' | 'shared'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'recurring' | 'own' | 'shared' | 'variable'>('all');
 
   const formatMoney = (val: number) => {
     return new Intl.NumberFormat('es-AR', {
@@ -32,6 +34,7 @@ export function MonthlyDueList({
     if (filter === 'recurring') return item.type === 'recurring';
     if (filter === 'own') return item.type === 'installment_own';
     if (filter === 'shared') return item.type === 'installment_shared';
+    if (filter === 'variable') return item.type === 'variable';
     return true;
   });
 
@@ -105,6 +108,17 @@ export function MonthlyDueList({
           >
             Cuotas
           </button>
+          <button
+            type="button"
+            onClick={() => setFilter('variable')}
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              filter === 'variable'
+                ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Variables
+          </button>
         </div>
       </div>
 
@@ -153,8 +167,23 @@ export function MonthlyDueList({
                           Compartido ({item.beneficiaryName})
                         </span>
                       )}
+                      {item.type === 'variable' && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
+                          <span>🛍️</span>
+                          <span>Gasto Variable</span>
+                        </span>
+                      )}
 
                       <span className="text-xs text-slate-400">{item.details}</span>
+                      {item.type === 'variable' && onEditVariable && (
+                        <button
+                          type="button"
+                          onClick={onEditVariable}
+                          className="text-[11px] text-purple-400 hover:text-purple-300 underline ml-1"
+                        >
+                          (Editar conceptos)
+                        </button>
+                      )}
                     </div>
 
                     <h4 className={`text-sm font-semibold ${item.isPaid ? 'text-slate-300 line-through decoration-emerald-500/40' : 'text-white'}`}>

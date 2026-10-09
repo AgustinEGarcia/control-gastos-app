@@ -199,4 +199,48 @@ describe('Servicio de Dashboard Consolidado Mensual (Spec 008)', () => {
     expect(summary.items[0].day).toBe(28); // Clamp a 28
     expect(summary.items[0].fullDate).toBe('2026-02-28');
   });
+
+  it('debe integrar gastos variables del mes en los totales propios y cronograma (Spec 013)', () => {
+    const expenses: RecurringExpense[] = [
+      {
+        id: 'exp-1',
+        user_id: 'u-1',
+        name: 'Internet',
+        category: 'Servicios',
+        estimated_amount: 30000,
+        actual_amount: 30000,
+        payment_day: 15,
+        payment_method_id: null,
+        is_active: true,
+        created_at: '',
+      },
+    ];
+
+    const variableExpense = {
+      year: 2026,
+      month: 10,
+      name: 'Gastos Varios',
+      amount: 500000,
+      items: [
+        { id: '1', label: 'Super', amount: 300000 },
+        { id: '2', label: 'Combustible', amount: 200000 },
+      ],
+      is_paid: false,
+    };
+
+    const summary = calculateMonthlyConsolidated(expenses, [], 2026, 10, {}, variableExpense);
+
+    expect(summary.totalVariable).toBe(500000);
+    expect(summary.totalRecurring).toBe(30000);
+    expect(summary.totalOwnToPay).toBe(530000); // 30.000 + 500.000
+    expect(summary.paidOwnAmount).toBe(30000); // solo internet está pagado
+    expect(summary.pendingOwnAmount).toBe(500000); // resta la partida variable
+
+    const varItem = summary.items.find((i) => i.type === 'variable');
+    expect(varItem).toBeDefined();
+    expect(varItem?.title).toBe('Gastos Varios');
+    expect(varItem?.amount).toBe(500000);
+    expect(varItem?.isPaid).toBe(false);
+  });
 });
+

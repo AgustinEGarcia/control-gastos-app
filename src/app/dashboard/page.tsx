@@ -10,10 +10,18 @@ import {
   toggleExpenseMonthlyPayment,
   updateInstallmentPaidStatus,
 } from '@/lib/services/expensePayments';
+import {
+  getVariableMonthlyExpense,
+  saveVariableMonthlyExpense,
+  toggleVariableExpensePaid,
+  type VariableMonthlyExpense,
+  type VariableExpenseItem,
+} from '@/lib/services/variableExpenses';
 import { calculateMonthlyConsolidated, getMonthName, type MonthlyDueItem } from '@/lib/services/dashboard';
 import { MonthSelector } from '@/components/dashboard/MonthSelector';
 import { DashboardMetricCards } from '@/components/dashboard/DashboardMetricCards';
 import { MonthlyDueList } from '@/components/dashboard/MonthlyDueList';
+import { VariableExpenseModal } from '@/components/dashboard/VariableExpenseModal';
 
 export default function DashboardPage() {
   const now = new Date();
@@ -24,6 +32,8 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState<TransactionWithDetails[]>([]);
   const [lentLoans, setLentLoans] = useState<LoanWithDetails[]>([]);
   const [expensePayments, setExpensePayments] = useState<Record<string, boolean>>({});
+  const [variableExpense, setVariableExpense] = useState<VariableMonthlyExpense | null>(null);
+  const [isVarModalOpen, setIsVarModalOpen] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -35,16 +45,18 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       setErrorMsg(null);
-      const [expData, txData, loansData, paymentsData] = await Promise.all([
+      const [expData, txData, loansData, paymentsData, varData] = await Promise.all([
         getRecurringExpenses(supabase),
         getTransactions(supabase),
         getLoans(supabase, { type: 'lent' }).catch(() => [] as LoanWithDetails[]),
         getMonthlyExpensePayments(supabase, selectedYear, selectedMonth),
+        getVariableMonthlyExpense(supabase, selectedYear, selectedMonth),
       ]);
       setExpenses(expData);
       setTransactions(txData);
       setLentLoans(loansData);
       setExpensePayments(paymentsData);
+      setVariableExpense(varData);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error al cargar los datos del dashboard.';
       setErrorMsg(msg);
@@ -63,9 +75,10 @@ export default function DashboardPage() {
       transactions,
       selectedYear,
       selectedMonth,
-      expensePayments
+      expensePayments,
+      variableExpense
     );
-  }, [expenses, transactions, selectedYear, selectedMonth, expensePayments]);
+  }, [expenses, transactions, selectedYear, selectedMonth, expensePayments, variableExpense]);
 
   const totalLentPending = useMemo(() => {
     return lentLoans
@@ -83,7 +96,11 @@ export default function DashboardPage() {
     setTogglingId(item.id);
 
     try {
-      if (item.type === 'recurring') {
+      if (item.type === 'variable') {
+        // Actualización optimista de gasto variable
+        setVariableExpense((prev) => (prev ? { ...prev, is_paid: nextState } : null));
+        await toggleVariableExpensePaid(supabase, selectedYear, selectedMonth, nextState);
+      } else if (item.type === 'recurring') {
         // Actualización optimista de gasto fijo
         setExpensePayments((prev) => ({
           ...prev,
@@ -118,6 +135,23 @@ export default function DashboardPage() {
     }
   };
 
+  const handleSaveVariableExpense = async (payload: {
+    year: number;
+    month: number;
+    name: string;
+    amount: number;
+    items: VariableExpenseItem[];
+  }) => {
+    const res = await saveVariableMonthlyExpense(supabase, {
+      ...payload,
+      is_paid: variableExpense?.is_paid ?? false,
+    });
+
+    if (res.success) {
+      setVariableExpense(res.data);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -131,11 +165,19 @@ export default function DashboardPage() {
               </h1>
             </div>
             <p className="text-sm text-slate-400 mt-1">
-              Visión integral mensual: gastos fijos, pagos abonados, pendientes y cuentas a cobrar.
+              Visión integral mensual: gastos fijos, variables, pagos abonados y cuentas a cobrar.
             </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsVarModalOpen(true)}
+              className="px-3.5 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/40 text-xs font-semibold rounded-xl text-purple-200 transition-all flex items-center gap-1.5 shadow-sm"
+            >
+              <span>🛍️</span>
+              <span>{variableExpense && variableExpense.amount > 0 ? 'Editar Gastos Varios' : '+ Gastos Varios'}</span>
+            </button>
             <a
               href="/gastos-recurrentes"
               className="px-3.5 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-semibold rounded-xl text-slate-300 hover:text-white transition-all"
@@ -192,10 +234,22 @@ export default function DashboardPage() {
               items={summary.items}
               monthName={`${getMonthName(selectedMonth)} ${selectedYear}`}
               onTogglePaid={handleTogglePaid}
+              onEditVariable={() => setIsVarModalOpen(true)}
               togglingId={togglingId}
             />
           </div>
         )}
+
+        {/* MODAL DE GASTOS VARIABLES */}
+        <VariableExpenseModal
+          isOpen={isVarModalOpen}
+          onClose={() => setIsVarModalOpen(false)}
+          year={selectedYear}
+          month={selectedMonth}
+          monthName={`${getMonthName(selectedMonth)} ${selectedYear}`}
+          initialData={variableExpense}
+          onSave={handleSaveVariableExpense}
+        />
       </div>
     </div>
   );

@@ -48,6 +48,12 @@ export function DashboardMetricCards({
             <span>Cuotas Propias:</span>
             <strong className="text-slate-200">{formatMoney(summary.totalInstallmentsOwn)}</strong>
           </div>
+          {summary.totalVariable > 0 && (
+            <div className="flex justify-between text-purple-300">
+              <span>Gastos Variables:</span>
+              <strong>{formatMoney(summary.totalVariable)}</strong>
+            </div>
+          )}
         </div>
       </div>
 

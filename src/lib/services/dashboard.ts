@@ -1,11 +1,12 @@
 import type { RecurringExpense, RecurringExpenseWithMethod } from './recurringExpenses';
 import type { TransactionWithDetails } from './transactions';
+import type { VariableMonthlyExpense } from './variableExpenses';
 
 export interface MonthlyDueItem {
   id: string;
   targetId: string;
   title: string;
-  type: 'recurring' | 'installment_own' | 'installment_shared';
+  type: 'recurring' | 'installment_own' | 'installment_shared' | 'variable';
   amount: number;
   day: number;
   fullDate: string;
@@ -22,6 +23,7 @@ export interface MonthlyConsolidatedSummary {
   pendingOwnAmount: number;
   totalRecurring: number;
   totalInstallmentsOwn: number;
+  totalVariable: number;
   totalSharedToCollect: number;
   totalAllCommitments: number;
   paidCommitmentsAmount: number;
@@ -29,6 +31,7 @@ export interface MonthlyConsolidatedSummary {
   totalCommitmentsCount: number;
   paidCommitmentsCount: number;
   percentageCompleted: number;
+  variableExpense?: VariableMonthlyExpense | null;
   items: MonthlyDueItem[];
 }
 
@@ -64,13 +67,15 @@ export function calculateMonthlyConsolidated(
   transactions: TransactionWithDetails[],
   year: number,
   month: number,
-  monthlyPaymentsMap: Record<string, boolean> = {}
+  monthlyPaymentsMap: Record<string, boolean> = {},
+  variableExpense: VariableMonthlyExpense | null = null
 ): MonthlyConsolidatedSummary {
   const items: MonthlyDueItem[] = [];
 
   let totalRecurring = 0;
   let totalInstallmentsOwn = 0;
   let totalSharedToCollect = 0;
+  let totalVariable = 0;
 
   const daysInTargetMonth = new Date(year, month, 0).getDate();
 
@@ -152,11 +157,34 @@ export function calculateMonthlyConsolidated(
     }
   }
 
-  // 3. Ordenar cronológicamente por día del mes
+  // 3. Procesar Partida de Gastos Variables del mes (Spec 013)
+  if (variableExpense && Number(variableExpense.amount) > 0) {
+    totalVariable = Number(variableExpense.amount);
+    const subItemsCount = variableExpense.items?.length || 0;
+    const details =
+      subItemsCount > 0
+        ? `${subItemsCount} concepto${subItemsCount > 1 ? 's' : ''} incluido${subItemsCount > 1 ? 's' : ''}`
+        : 'Presupuesto variable mensual';
+
+    items.push({
+      id: `var-${variableExpense.id || 'curr'}`,
+      targetId: variableExpense.id || 'variable',
+      title: variableExpense.name || 'Gastos Varios',
+      type: 'variable',
+      amount: totalVariable,
+      day: 1, // Se ubica a inicio del mes para visibilidad
+      fullDate: `${year}-${String(month).padStart(2, '0')}-01`,
+      isPaid: Boolean(variableExpense.is_paid),
+      details,
+      beneficiaryName: null,
+    });
+  }
+
+  // 4. Ordenar cronológicamente por día del mes
   items.sort((a, b) => a.day - b.day);
 
-  // 4. Cálculos consolidados
-  const totalOwnToPay = Number((totalRecurring + totalInstallmentsOwn).toFixed(2));
+  // 5. Cálculos consolidados
+  const totalOwnToPay = Number((totalRecurring + totalInstallmentsOwn + totalVariable).toFixed(2));
   const totalAllCommitments = Number((totalOwnToPay + totalSharedToCollect).toFixed(2));
 
   let paidCommitmentsAmount = 0;
@@ -190,6 +218,7 @@ export function calculateMonthlyConsolidated(
     pendingOwnAmount,
     totalRecurring: Number(totalRecurring.toFixed(2)),
     totalInstallmentsOwn: Number(totalInstallmentsOwn.toFixed(2)),
+    totalVariable: Number(totalVariable.toFixed(2)),
     totalSharedToCollect: Number(totalSharedToCollect.toFixed(2)),
     totalAllCommitments,
     paidCommitmentsAmount: Number(paidCommitmentsAmount.toFixed(2)),
@@ -197,6 +226,7 @@ export function calculateMonthlyConsolidated(
     totalCommitmentsCount,
     paidCommitmentsCount,
     percentageCompleted,
+    variableExpense,
     items,
   };
 }
@@ -221,20 +251,18 @@ export function calculateCardMonthlyCommitments(
   }
 
   const cardExpenses = expenses.filter(
-    (e): e is RecurringExpenseWithMethod =>
-      Boolean(e.is_active && e.payment_method_id === paymentMethodId)
+    (e) => e.payment_method_id === paymentMethodId && e.is_active
   );
 
-  let totalRecurring = 0;
-  for (const exp of cardExpenses) {
-    totalRecurring += Number(exp.actual_amount ?? exp.estimated_amount);
-  }
+  const totalRecurring = cardExpenses.reduce((sum, e) => {
+    return sum + Number(e.actual_amount ?? e.estimated_amount);
+  }, 0);
 
   return {
     paymentMethodId,
     totalInstallments: Number(totalInstallments.toFixed(2)),
     totalRecurring: Number(totalRecurring.toFixed(2)),
     totalToPay: Number((totalInstallments + totalRecurring).toFixed(2)),
-    recurringExpenses: cardExpenses,
+    recurringExpenses: cardExpenses as RecurringExpenseWithMethod[],
   };
 }
