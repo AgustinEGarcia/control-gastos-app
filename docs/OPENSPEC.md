@@ -110,6 +110,18 @@ CREATE TABLE payments_received (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- TABLA DE PAGOS MENSUALES DE GASTOS FIJOS (Spec 012)
+CREATE TABLE IF NOT EXISTS monthly_expense_payments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    expense_id UUID REFERENCES recurring_expenses(id) ON DELETE CASCADE,
+    year INT NOT NULL,
+    month INT NOT NULL,
+    is_paid BOOLEAN NOT NULL DEFAULT true,
+    paid_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT unique_monthly_expense_payment UNIQUE (user_id, expense_id, year, month)
+);
+
 -- POLÍTICAS ROW LEVEL SECURITY (RLS)
 ALTER TABLE payment_methods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE people ENABLE ROW LEVEL SECURITY;
@@ -119,6 +131,7 @@ ALTER TABLE installments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE personal_loans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE loan_repayments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments_received ENABLE ROW LEVEL SECURITY;
+ALTER TABLE monthly_expense_payments ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admin Full Access" ON payment_methods FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Admin Full Access" ON people FOR ALL USING (auth.uid() = user_id);
@@ -126,6 +139,7 @@ CREATE POLICY "Admin Full Access" ON recurring_expenses FOR ALL USING (auth.uid(
 CREATE POLICY "Admin Full Access" ON transactions FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Admin Full Access" ON personal_loans FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Admin Full Access" ON payments_received FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Admin Full Access" ON monthly_expense_payments FOR ALL USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can manage installments of their transactions" ON installments
 FOR ALL

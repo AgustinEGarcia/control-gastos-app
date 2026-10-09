@@ -129,16 +129,52 @@ describe('Servicio de Dashboard Consolidado Mensual (Spec 008)', () => {
     expect(summary.items).toHaveLength(3);
     expect(summary.items[0].day).toBe(5);
     expect(summary.items[0].type).toBe('installment_own');
+    expect(summary.items[0].targetId).toBe('i-2');
     expect(summary.items[1].day).toBe(10);
     expect(summary.items[1].type).toBe('recurring');
+    expect(summary.items[1].targetId).toBe('exp-1');
     expect(summary.items[2].day).toBe(20);
     expect(summary.items[2].type).toBe('installment_shared');
     expect(summary.items[2].beneficiaryName).toBe('Papá');
+    expect(summary.items[2].targetId).toBe('i-3');
 
-    // Pagos cubiertos (Alquiler con monto facturado)
+    // Pagos cubiertos y montos propios
     expect(summary.paidCommitmentsCount).toBe(1);
     expect(summary.paidCommitmentsAmount).toBe(180000);
+    expect(summary.paidOwnAmount).toBe(180000);
+    expect(summary.pendingOwnAmount).toBe(20000); // 200.000 - 180.000
     expect(summary.percentageCompleted).toBe(33); // 1 de 3
+  });
+
+  it('debe respetar el mapa de pagos mensuales de gastos fijos (monthlyPaymentsMap)', () => {
+    const expenses: RecurringExpense[] = [
+      {
+        id: 'exp-alquiler',
+        user_id: 'u-1',
+        name: 'Alquiler',
+        category: 'Vivienda',
+        estimated_amount: 150000,
+        actual_amount: null,
+        payment_day: 10,
+        payment_method_id: null,
+        is_active: true,
+        created_at: '',
+      },
+    ];
+
+    // Sin mapa -> pendiente (no tiene actual_amount)
+    const sinPagar = calculateMonthlyConsolidated(expenses, [], 2026, 3);
+    expect(sinPagar.items[0].isPaid).toBe(false);
+    expect(sinPagar.paidOwnAmount).toBe(0);
+    expect(sinPagar.pendingOwnAmount).toBe(150000);
+
+    // Con mapa marcado como true -> pagado
+    const conPago = calculateMonthlyConsolidated(expenses, [], 2026, 3, {
+      'exp-alquiler': true,
+    });
+    expect(conPago.items[0].isPaid).toBe(true);
+    expect(conPago.paidOwnAmount).toBe(150000);
+    expect(conPago.pendingOwnAmount).toBe(0);
   });
 
   it('debe ajustar fechas con días inválidos en meses cortos (ej. Febrero)', () => {

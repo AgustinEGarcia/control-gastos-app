@@ -3,6 +3,7 @@ import type { TransactionWithDetails } from './transactions';
 
 export interface MonthlyDueItem {
   id: string;
+  targetId: string;
   title: string;
   type: 'recurring' | 'installment_own' | 'installment_shared';
   amount: number;
@@ -17,6 +18,8 @@ export interface MonthlyConsolidatedSummary {
   year: number;
   month: number;
   totalOwnToPay: number;
+  paidOwnAmount: number;
+  pendingOwnAmount: number;
   totalRecurring: number;
   totalInstallmentsOwn: number;
   totalSharedToCollect: number;
@@ -60,7 +63,8 @@ export function calculateMonthlyConsolidated(
   expenses: (RecurringExpense | RecurringExpenseWithMethod)[],
   transactions: TransactionWithDetails[],
   year: number,
-  month: number
+  month: number,
+  monthlyPaymentsMap: Record<string, boolean> = {}
 ): MonthlyConsolidatedSummary {
   const items: MonthlyDueItem[] = [];
 
@@ -85,15 +89,21 @@ export function calculateMonthlyConsolidated(
         ? ` • 💳 ${exp.payment_method.name}`
         : '';
 
+    // Si está registrado en el mapa mensual de pagos, usar ese valor; sino, fallback si tiene actual_amount
+    const isPaid =
+      monthlyPaymentsMap[exp.id] !== undefined
+        ? Boolean(monthlyPaymentsMap[exp.id])
+        : exp.actual_amount !== null && exp.actual_amount !== undefined;
+
     items.push({
       id: `exp-${exp.id}`,
+      targetId: exp.id,
       title: exp.name,
       type: 'recurring',
       amount,
       day: effectiveDay,
       fullDate,
-      // Consideramos pagado si ya se cargó monto real facturado
-      isPaid: exp.actual_amount !== null && exp.actual_amount !== undefined,
+      isPaid,
       details: `${exp.category || 'Gasto Fijo Mensual'}${methodDetail}`,
       beneficiaryName: null,
     });
@@ -113,6 +123,7 @@ export function calculateMonthlyConsolidated(
           totalSharedToCollect += amount;
           items.push({
             id: `inst-${inst.id}`,
+            targetId: inst.id,
             title: `${tx.description} (Cuota ${inst.installment_number}/${tx.installments_count})`,
             type: 'installment_shared',
             amount,
@@ -126,6 +137,7 @@ export function calculateMonthlyConsolidated(
           totalInstallmentsOwn += amount;
           items.push({
             id: `inst-${inst.id}`,
+            targetId: inst.id,
             title: `${tx.description} (Cuota ${inst.installment_number}/${tx.installments_count})`,
             type: 'installment_own',
             amount,
@@ -149,14 +161,20 @@ export function calculateMonthlyConsolidated(
 
   let paidCommitmentsAmount = 0;
   let paidCommitmentsCount = 0;
+  let paidOwnAmount = 0;
 
   for (const it of items) {
     if (it.isPaid) {
       paidCommitmentsAmount += it.amount;
       paidCommitmentsCount += 1;
+      if (it.type !== 'installment_shared') {
+        paidOwnAmount += it.amount;
+      }
     }
   }
 
+  paidOwnAmount = Number(paidOwnAmount.toFixed(2));
+  const pendingOwnAmount = Number(Math.max(0, totalOwnToPay - paidOwnAmount).toFixed(2));
   const totalCommitmentsCount = items.length;
   const pendingCommitmentsAmount = Number((totalAllCommitments - paidCommitmentsAmount).toFixed(2));
   const percentageCompleted =
@@ -168,6 +186,8 @@ export function calculateMonthlyConsolidated(
     year,
     month,
     totalOwnToPay,
+    paidOwnAmount,
+    pendingOwnAmount,
     totalRecurring: Number(totalRecurring.toFixed(2)),
     totalInstallmentsOwn: Number(totalInstallmentsOwn.toFixed(2)),
     totalSharedToCollect: Number(totalSharedToCollect.toFixed(2)),
