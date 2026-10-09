@@ -8,6 +8,7 @@ interface LoanCardProps {
   onOpenRepaymentModal: (loan: LoanWithDetails) => void;
   onDeleteLoan: (id: string) => Promise<void>;
   onDeleteRepayment: (repaymentId: string) => Promise<void>;
+  onEditLoan?: (loan: LoanWithDetails) => void;
 }
 
 export function LoanCard({
@@ -15,6 +16,7 @@ export function LoanCard({
   onOpenRepaymentModal,
   onDeleteLoan,
   onDeleteRepayment,
+  onEditLoan,
 }: LoanCardProps) {
   const [showHistory, setShowHistory] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -120,14 +122,25 @@ export function LoanCard({
           </div>
         </div>
 
-        <button
-          onClick={handleDeleteLoan}
-          disabled={isDeleting}
-          title={isLent ? 'Eliminar registro de dinero prestado' : 'Eliminar préstamo'}
-          className="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
-        >
-          🗑
-        </button>
+        <div className="flex items-center gap-1">
+          {onEditLoan && (
+            <button
+              onClick={() => onEditLoan(loan)}
+              title={isLent ? 'Editar dinero prestado' : 'Editar préstamo'}
+              className="text-slate-500 hover:text-emerald-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors text-sm"
+            >
+              ✏️
+            </button>
+          )}
+          <button
+            onClick={handleDeleteLoan}
+            disabled={isDeleting}
+            title={isLent ? 'Eliminar registro de dinero prestado' : 'Eliminar préstamo'}
+            className="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+          >
+            🗑
+          </button>
+        </div>
       </div>
 
       {/* DETALLES Y PROGRESO DE AMORTIZACIÓN */}

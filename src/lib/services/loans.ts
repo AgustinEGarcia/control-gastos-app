@@ -366,3 +366,42 @@ export async function deleteLoan(
     throw new Error(`Error al eliminar préstamo: ${error.message}`);
   }
 }
+
+export interface UpdateLoanInput {
+  lender_person_id?: string;
+  loan_type?: 'borrowed' | 'lent';
+  initial_amount?: number;
+  currency?: 'ARS' | 'USD';
+  loan_date?: string;
+  expected_return_date?: string | null;
+  notes?: string | null;
+}
+
+export async function updateLoan(
+  supabase: SupabaseClient<Database>,
+  loanId: string,
+  input: UpdateLoanInput
+): Promise<PersonalLoan> {
+  const payload: any = {};
+  if (input.lender_person_id !== undefined) payload.lender_person_id = input.lender_person_id;
+  if (input.loan_type !== undefined) payload.loan_type = input.loan_type;
+  if (input.initial_amount !== undefined) payload.initial_amount = Number(input.initial_amount);
+  if (input.currency !== undefined) payload.currency = input.currency;
+  if (input.loan_date !== undefined) payload.loan_date = input.loan_date;
+  if (input.expected_return_date !== undefined) payload.expected_return_date = input.expected_return_date;
+  if (input.notes !== undefined) payload.notes = input.notes?.trim() || null;
+
+  const { data, error } = await supabase
+    .from('personal_loans')
+    .update(payload)
+    .eq('id', loanId)
+    .select()
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Error al actualizar préstamo: ${error?.message}`);
+  }
+
+  return data;
+}
+

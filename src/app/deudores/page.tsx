@@ -13,6 +13,7 @@ import {
 import { DebtorSummaryCards } from '@/components/debtors/DebtorSummaryCards';
 import { DebtorCard } from '@/components/debtors/DebtorCard';
 import { PaymentReceivedModal } from '@/components/debtors/PaymentReceivedModal';
+import { deletePerson } from '@/lib/services/transactions';
 
 export default function DeudoresPage() {
   const [debtors, setDebtors] = useState<DebtorAccount[]>([]);
@@ -70,6 +71,11 @@ export default function DeudoresPage() {
 
   const handleDeletePayment = async (paymentId: string) => {
     await deletePaymentReceived(supabase, paymentId);
+    await loadData();
+  };
+
+  const handleDeletePerson = async (personId: string) => {
+    await deletePerson(supabase, personId);
     await loadData();
   };
 
@@ -190,6 +196,7 @@ export default function DeudoresPage() {
                 debtor={debtor}
                 onOpenPaymentModal={(d) => setSelectedDebtorForPayment(d)}
                 onDeletePayment={handleDeletePayment}
+                onDeletePerson={handleDeletePerson}
               />
             ))}
           </div>

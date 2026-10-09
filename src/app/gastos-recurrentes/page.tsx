@@ -24,6 +24,7 @@ export default function GastosRecurrentesPage() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<RecurringExpenseWithMethod | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -67,18 +68,23 @@ export default function GastosRecurrentesPage() {
     return expenses.filter((e) => e.category === selectedCategory);
   }, [expenses, selectedCategory]);
 
-  const handleCreate = async (input: RecurringExpenseInput) => {
+  const handleSave = async (input: RecurringExpenseInput) => {
     setSubmitting(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Debes iniciar sesión para registrar un gasto fijo.');
-      }
+      if (editingExpense) {
+        await updateRecurringExpense(supabase, editingExpense.id, input);
+      } else {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('Debes iniciar sesión para registrar un gasto fijo.');
+        }
 
-      await createRecurringExpense(supabase, input, user.id);
+        await createRecurringExpense(supabase, input, user.id);
+      }
       setIsFormOpen(false);
+      setEditingExpense(null);
       await fetchExpenses();
     } finally {
       setSubmitting(false);
@@ -133,7 +139,10 @@ export default function GastosRecurrentesPage() {
         </div>
 
         <button
-          onClick={() => setIsFormOpen(true)}
+          onClick={() => {
+            setEditingExpense(null);
+            setIsFormOpen(true);
+          }}
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
         >
           <span className="text-base leading-none">+</span>
@@ -190,7 +199,10 @@ export default function GastosRecurrentesPage() {
             Registra tu alquiler, servicios de luz, internet o suscripciones para proyectar tu costo de vida del mes.
           </p>
           <button
-            onClick={() => setIsFormOpen(true)}
+            onClick={() => {
+              setEditingExpense(null);
+              setIsFormOpen(true);
+            }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-sm transition-all"
           >
             + Cargar primer gasto fijo
@@ -205,6 +217,10 @@ export default function GastosRecurrentesPage() {
               onUpdateActualAmount={handleUpdateActual}
               onToggleActive={handleToggleActive}
               onDelete={handleDelete}
+              onEdit={(exp) => {
+                setEditingExpense(exp);
+                setIsFormOpen(true);
+              }}
             />
           ))}
         </div>
@@ -213,10 +229,14 @@ export default function GastosRecurrentesPage() {
       {/* Modal Formulario */}
       {isFormOpen && (
         <ExpenseForm
-          onSuccess={handleCreate}
-          onCancel={() => setIsFormOpen(false)}
+          onSuccess={handleSave}
+          onCancel={() => {
+            setIsFormOpen(false);
+            setEditingExpense(null);
+          }}
           submitting={submitting}
           paymentMethods={paymentMethods}
+          editingExpense={editingExpense}
         />
       )}
     </div>

@@ -8,6 +8,7 @@ import {
   type RepaymentInput,
   getLoans,
   createLoan,
+  updateLoan,
   createRepayment,
   deleteLoan,
   deleteRepayment,
@@ -28,6 +29,7 @@ export default function PrestamosPage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingLoan, setEditingLoan] = useState<LoanWithDetails | null>(null);
   const [formInitialType, setFormInitialType] = useState<'borrowed' | 'lent'>('lent');
   const [selectedLoanForRepayment, setSelectedLoanForRepayment] = useState<LoanWithDetails | null>(null);
   const [typeTab, setTypeTab] = useState<'all' | 'lent' | 'borrowed'>('all');
@@ -81,17 +83,23 @@ export default function PrestamosPage() {
   }, [loansByType, currencyFilter]);
 
   const handleOpenForm = (type: 'borrowed' | 'lent') => {
+    setEditingLoan(null);
     setFormInitialType(type);
     setIsFormOpen(true);
   };
 
-  const handleCreateLoan = async (input: LoanInput) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  const handleSaveLoan = async (input: LoanInput) => {
+    if (editingLoan) {
+      await updateLoan(supabase, editingLoan.id, input);
+    } else {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    const userId = user?.id || 'demo-user-id';
-    await createLoan(supabase, input, userId);
+      const userId = user?.id || 'demo-user-id';
+      await createLoan(supabase, input, userId);
+    }
+    setEditingLoan(null);
     await loadData();
   };
 
@@ -304,18 +312,27 @@ export default function PrestamosPage() {
                 onOpenRepaymentModal={(l) => setSelectedLoanForRepayment(l)}
                 onDeleteLoan={handleDeleteLoan}
                 onDeleteRepayment={handleDeleteRepayment}
+                onEditLoan={(l) => {
+                  setEditingLoan(l);
+                  setFormInitialType(l.loan_type as 'borrowed' | 'lent');
+                  setIsFormOpen(true);
+                }}
               />
             ))}
           </div>
         )}
 
-        {/* MODAL NUEVO PRÉSTAMO */}
+        {/* MODAL NUEVO / EDITAR PRÉSTAMO */}
         <LoanForm
           people={people}
           isOpen={isFormOpen}
           initialType={formInitialType}
-          onClose={() => setIsFormOpen(false)}
-          onSubmit={handleCreateLoan}
+          editingLoan={editingLoan}
+          onClose={() => {
+            setIsFormOpen(false);
+            setEditingLoan(null);
+          }}
+          onSubmit={handleSaveLoan}
           onCreatePerson={handleCreatePerson}
         />
 

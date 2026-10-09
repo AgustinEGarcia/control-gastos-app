@@ -7,6 +7,7 @@ import {
   type PaymentMethodInput,
   getPaymentMethods,
   createPaymentMethod,
+  updatePaymentMethod,
   deletePaymentMethod,
 } from '@/lib/services/paymentMethods';
 import {
@@ -21,6 +22,7 @@ export default function MetodosPagoPage() {
   const [expenses, setExpenses] = useState<RecurringExpenseWithMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -49,16 +51,21 @@ export default function MetodosPagoPage() {
     fetchMethods();
   }, [fetchMethods]);
 
-  const handleCreate = async (input: PaymentMethodInput) => {
+  const handleSave = async (input: PaymentMethodInput) => {
     setSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Debes iniciar sesión para registrar un método de pago.');
-      }
+      if (editingMethod) {
+        await updatePaymentMethod(supabase, editingMethod.id, input);
+      } else {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('Debes iniciar sesión para registrar un método de pago.');
+        }
 
-      await createPaymentMethod(supabase, input, user.id);
+        await createPaymentMethod(supabase, input, user.id);
+      }
       setIsFormOpen(false);
+      setEditingMethod(null);
       await fetchMethods();
     } finally {
       setSubmitting(false);
@@ -96,7 +103,10 @@ export default function MetodosPagoPage() {
         </div>
 
         <button
-          onClick={() => setIsFormOpen(true)}
+          onClick={() => {
+            setEditingMethod(null);
+            setIsFormOpen(true);
+          }}
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
         >
           <span className="text-base leading-none">+</span>
@@ -143,7 +153,10 @@ export default function MetodosPagoPage() {
             Agrega tu primera tarjeta de crédito, débito o cuenta para comenzar a organizar tus consumos y fechas de vencimiento.
           </p>
           <button
-            onClick={() => setIsFormOpen(true)}
+            onClick={() => {
+              setEditingMethod(null);
+              setIsFormOpen(true);
+            }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-sm transition-all"
           >
             + Cargar primer método
@@ -166,6 +179,10 @@ export default function MetodosPagoPage() {
                 key={method.id}
                 method={method}
                 onDelete={handleDelete}
+                onEdit={(m) => {
+                  setEditingMethod(m);
+                  setIsFormOpen(true);
+                }}
                 deleting={deletingId === method.id}
                 recurringCount={count}
                 recurringTotal={total}
@@ -178,9 +195,13 @@ export default function MetodosPagoPage() {
       {/* Modal Formulario */}
       {isFormOpen && (
         <PaymentMethodForm
-          onSuccess={handleCreate}
-          onCancel={() => setIsFormOpen(false)}
+          onSuccess={handleSave}
+          onCancel={() => {
+            setIsFormOpen(false);
+            setEditingMethod(null);
+          }}
           submitting={submitting}
+          editingMethod={editingMethod}
         />
       )}
     </div>

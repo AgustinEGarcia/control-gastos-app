@@ -9,6 +9,7 @@ interface Props {
   onUpdateActualAmount: (id: string, amount: number | null) => Promise<void>;
   onToggleActive: (id: string, isActive: boolean) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onEdit?: (expense: RecurringExpenseWithMethod) => void;
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -27,6 +28,7 @@ export function ExpenseCard({
   onUpdateActualAmount,
   onToggleActive,
   onDelete,
+  onEdit,
 }: Props) {
   const [isEditingActual, setIsEditingActual] = useState(false);
   const [actualInput, setActualInput] = useState(
@@ -112,6 +114,15 @@ export function ExpenseCard({
 
         {/* Acciones superiores */}
         <div className="flex items-center gap-2">
+          {onEdit && (
+            <button
+              onClick={() => onEdit(expense)}
+              title="Editar gasto fijo"
+              className="text-zinc-500 hover:text-emerald-400 p-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors text-sm"
+            >
+              ✏️
+            </button>
+          )}
           <button
             onClick={handleToggle}
             disabled={toggling}

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Person } from '@/lib/services/transactions';
-import type { LoanInput } from '@/lib/services/loans';
+import type { LoanInput, LoanWithDetails } from '@/lib/services/loans';
 import { validateLoanInput } from '@/lib/services/loans';
 
 interface LoanFormProps {
@@ -12,6 +12,7 @@ interface LoanFormProps {
   onSubmit: (input: LoanInput) => Promise<void>;
   onCreatePerson: (name: string) => Promise<Person>;
   initialType?: 'borrowed' | 'lent';
+  editingLoan?: LoanWithDetails | null;
 }
 
 export function LoanForm({
@@ -21,6 +22,7 @@ export function LoanForm({
   onSubmit,
   onCreatePerson,
   initialType = 'borrowed',
+  editingLoan,
 }: LoanFormProps) {
   const today = new Date().toISOString().split('T')[0];
 
@@ -32,6 +34,28 @@ export function LoanForm({
   const [hasNoDueDate, setHasNoDueDate] = useState<boolean>(true);
   const [expectedReturnDate, setExpectedReturnDate] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+
+  useEffect(() => {
+    if (editingLoan) {
+      setLoanType(editingLoan.loan_type as 'borrowed' | 'lent');
+      setPersonId(editingLoan.lender_person_id);
+      setInitialAmount(String(editingLoan.initial_amount));
+      setCurrency(editingLoan.currency as 'ARS' | 'USD');
+      setLoanDate(editingLoan.loan_date);
+      setHasNoDueDate(!editingLoan.expected_return_date);
+      setExpectedReturnDate(editingLoan.expected_return_date || '');
+      setNotes(editingLoan.notes || '');
+    } else {
+      setLoanType(initialType);
+      setPersonId('');
+      setInitialAmount('');
+      setCurrency('ARS');
+      setLoanDate(today);
+      setHasNoDueDate(true);
+      setExpectedReturnDate('');
+      setNotes('');
+    }
+  }, [editingLoan, isOpen, initialType, today]);
 
   // Creación rápida de nueva persona
   const [isCreatingPerson, setIsCreatingPerson] = useState(false);
@@ -105,10 +129,18 @@ export function LoanForm({
         <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
           <div>
             <h3 className="text-lg font-bold text-white">
-              {isLent ? 'Registrar Dinero Prestado' : 'Registrar Deuda / Préstamo Tomado'}
+              {editingLoan
+                ? isLent
+                  ? 'Editar Dinero Prestado'
+                  : 'Editar Deuda / Préstamo Tomado'
+                : isLent
+                ? 'Registrar Dinero Prestado'
+                : 'Registrar Deuda / Préstamo Tomado'}
             </h3>
             <p className="text-xs text-slate-400">
-              {isLent
+              {editingLoan
+                ? 'Modifica los datos del préstamo registrado.'
+                : isLent
                 ? 'Registra plata que le prestaste a alguien para hacerle seguimiento.'
                 : 'Registra un préstamo personal que recibiste y debes devolver.'}
             </p>
@@ -360,6 +392,8 @@ export function LoanForm({
             >
               {isSubmitting
                 ? 'Guardando...'
+                : editingLoan
+                ? 'Guardar Cambios'
                 : isLent
                 ? 'Guardar Dinero Prestado'
                 : 'Guardar Préstamo Tomado'}

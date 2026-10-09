@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import type { PaymentMethod } from '@/lib/services/paymentMethods';
 import {
   type RecurringExpenseInput,
+  type RecurringExpenseWithMethod,
   validateRecurringExpenseInput,
 } from '@/lib/services/recurringExpenses';
 
@@ -12,6 +13,7 @@ interface Props {
   onCancel: () => void;
   submitting: boolean;
   paymentMethods?: PaymentMethod[];
+  editingExpense?: RecurringExpenseWithMethod | null;
 }
 
 const CATEGORIES = [
@@ -25,13 +27,23 @@ const CATEGORIES = [
   'Otros',
 ];
 
-export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = [] }: Props) {
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState('Servicios');
-  const [estimatedAmount, setEstimatedAmount] = useState('');
-  const [actualAmount, setActualAmount] = useState('');
-  const [paymentDay, setPaymentDay] = useState('');
-  const [paymentMethodId, setPaymentMethodId] = useState<string>('');
+export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = [], editingExpense }: Props) {
+  const [name, setName] = useState(editingExpense?.name ?? '');
+  const [category, setCategory] = useState(editingExpense?.category ?? 'Servicios');
+  const [estimatedAmount, setEstimatedAmount] = useState(
+    editingExpense?.estimated_amount !== undefined ? String(editingExpense.estimated_amount) : ''
+  );
+  const [actualAmount, setActualAmount] = useState(
+    editingExpense?.actual_amount !== null && editingExpense?.actual_amount !== undefined
+      ? String(editingExpense.actual_amount)
+      : ''
+  );
+  const [paymentDay, setPaymentDay] = useState(
+    editingExpense?.payment_day !== undefined ? String(editingExpense.payment_day) : ''
+  );
+  const [paymentMethodId, setPaymentMethodId] = useState<string>(
+    editingExpense?.payment_method_id ?? ''
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
 
@@ -67,7 +79,9 @@ export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
       <div className="w-full max-w-lg rounded-2xl bg-zinc-900 border border-zinc-800 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-5">
-          <h2 className="text-lg font-bold text-white">Nuevo Gasto Fijo Recurrente</h2>
+          <h2 className="text-lg font-bold text-white">
+            {editingExpense ? 'Editar Gasto Fijo Recurrente' : 'Nuevo Gasto Fijo Recurrente'}
+          </h2>
           <button
             onClick={onCancel}
             className="text-zinc-400 hover:text-white transition-colors text-sm p-1"
@@ -221,7 +235,11 @@ export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = 
               disabled={submitting}
               className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-semibold transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-2"
             >
-              {submitting ? 'Guardando...' : 'Crear Gasto Fijo'}
+              {submitting
+                ? 'Guardando...'
+                : editingExpense
+                ? 'Guardar Cambios'
+                : 'Crear Gasto Fijo'}
             </button>
           </div>
         </form>

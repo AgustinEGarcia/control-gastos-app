@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import {
+  type PaymentMethod,
   type PaymentMethodInput,
   validatePaymentMethodInput,
 } from '@/lib/services/paymentMethods';
@@ -10,14 +11,23 @@ interface Props {
   onSuccess: (input: PaymentMethodInput) => Promise<void>;
   onCancel: () => void;
   submitting: boolean;
+  editingMethod?: PaymentMethod | null;
 }
 
-export function PaymentMethodForm({ onSuccess, onCancel, submitting }: Props) {
-  const [name, setName] = useState('');
-  const [isOwn, setIsOwn] = useState(true);
-  const [ownerName, setOwnerName] = useState('');
-  const [closingDay, setClosingDay] = useState('');
-  const [dueDay, setDueDay] = useState('');
+export function PaymentMethodForm({ onSuccess, onCancel, submitting, editingMethod }: Props) {
+  const [name, setName] = useState(editingMethod?.name ?? '');
+  const [isOwn, setIsOwn] = useState(editingMethod ? editingMethod.is_own : true);
+  const [ownerName, setOwnerName] = useState(editingMethod?.owner_name ?? '');
+  const [closingDay, setClosingDay] = useState(
+    editingMethod?.closing_day !== null && editingMethod?.closing_day !== undefined
+      ? String(editingMethod.closing_day)
+      : ''
+  );
+  const [dueDay, setDueDay] = useState(
+    editingMethod?.due_day !== null && editingMethod?.due_day !== undefined
+      ? String(editingMethod.due_day)
+      : ''
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
 
@@ -51,7 +61,9 @@ export function PaymentMethodForm({ onSuccess, onCancel, submitting }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="w-full max-w-lg rounded-2xl bg-zinc-900 border border-zinc-800 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-5">
-          <h2 className="text-lg font-bold text-white">Nuevo Método de Pago</h2>
+          <h2 className="text-lg font-bold text-white">
+            {editingMethod ? 'Editar Método de Pago' : 'Nuevo Método de Pago'}
+          </h2>
           <button
             onClick={onCancel}
             className="text-zinc-400 hover:text-white transition-colors text-sm p-1"
@@ -189,7 +201,11 @@ export function PaymentMethodForm({ onSuccess, onCancel, submitting }: Props) {
               disabled={submitting}
               className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-semibold transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-2"
             >
-              {submitting ? 'Guardando...' : 'Crear Método de Pago'}
+              {submitting
+                ? 'Guardando...'
+                : editingMethod
+                ? 'Guardar Cambios'
+                : 'Crear Método de Pago'}
             </button>
           </div>
         </form>

@@ -7,6 +7,7 @@ import { formatCurrency } from '@/components/recurring-expenses/ExpenseSummaryCa
 interface Props {
   method: PaymentMethod;
   onDelete: (id: string) => void;
+  onEdit?: (method: PaymentMethod) => void;
   deleting?: boolean;
   recurringCount?: number;
   recurringTotal?: number;
@@ -15,6 +16,7 @@ interface Props {
 export function PaymentMethodCard({
   method,
   onDelete,
+  onEdit,
   deleting,
   recurringCount = 0,
   recurringTotal = 0,
@@ -54,14 +56,26 @@ export function PaymentMethodCard({
             </div>
           </div>
 
-          <button
-            onClick={() => onDelete(method.id)}
-            disabled={deleting}
-            title="Eliminar método de pago"
-            className="opacity-60 group-hover:opacity-100 hover:text-red-400 text-zinc-500 transition-all p-1.5 rounded-lg hover:bg-red-500/10 text-sm disabled:opacity-30"
-          >
-            {deleting ? '...' : '🗑️'}
-          </button>
+          <div className="flex items-center gap-1">
+            {onEdit && (
+              <button
+                onClick={() => onEdit(method)}
+                title="Editar método de pago"
+                className="opacity-60 group-hover:opacity-100 hover:text-emerald-400 text-zinc-500 transition-all p-1.5 rounded-lg hover:bg-emerald-500/10 text-sm"
+              >
+                ✏️
+              </button>
+            )}
+
+            <button
+              onClick={() => onDelete(method.id)}
+              disabled={deleting}
+              title="Eliminar método de pago"
+              className="opacity-60 group-hover:opacity-100 hover:text-red-400 text-zinc-500 transition-all p-1.5 rounded-lg hover:bg-red-500/10 text-sm disabled:opacity-30"
+            >
+              {deleting ? '...' : '🗑️'}
+            </button>
+          </div>
         </div>
 
         {/* Suscripciones o débitos fijos vinculados */}

@@ -321,3 +321,89 @@ export async function deleteTransaction(
     throw new Error(`Error al eliminar la transacción: ${error.message}`);
   }
 }
+
+export interface UpdateTransactionInput {
+  description?: string;
+  purchase_date?: string;
+  payment_method_id?: string | null;
+  beneficiary_person_id?: string | null;
+}
+
+export async function updateTransaction(
+  supabase: SupabaseClient<Database>,
+  id: string,
+  input: UpdateTransactionInput
+): Promise<void> {
+  const { error } = await supabase
+    .from('transactions')
+    .update(input)
+    .eq('id', id);
+
+  if (error) {
+    throw new Error(`Error al actualizar transacción: ${error.message}`);
+  }
+}
+
+export async function checkPersonHasAssociatedRecords(
+  supabase: SupabaseClient<Database>,
+  personId: string
+): Promise<{ hasRecords: boolean; reasons: string[] }> {
+  const reasons: string[] = [];
+
+  // 1. Comprobar transacciones (compras/cuotas)
+  const { data: txs } = await supabase
+    .from('transactions')
+    .select('id')
+    .or(`beneficiary_person_id.eq.${personId},payer_person_id.eq.${personId}`);
+
+  if (txs && txs.length > 0) {
+    reasons.push(`${txs.length} compra(s) o gasto(s) compartidos`);
+  }
+
+  // 2. Comprobar préstamos personales
+  const { data: loans } = await supabase
+    .from('personal_loans')
+    .select('id')
+    .eq('lender_person_id', personId);
+
+  if (loans && loans.length > 0) {
+    reasons.push(`${loans.length} préstamo(s) personal(es)`);
+  }
+
+  // 3. Comprobar abonos/pagos recibidos
+  const { data: payments } = await supabase
+    .from('payments_received')
+    .select('id')
+    .eq('person_id', personId);
+
+  if (payments && payments.length > 0) {
+    reasons.push(`${payments.length} abono(s) recibido(s)`);
+  }
+
+  return {
+    hasRecords: reasons.length > 0,
+    reasons,
+  };
+}
+
+export async function deletePerson(
+  supabase: SupabaseClient<Database>,
+  personId: string
+): Promise<void> {
+  const check = await checkPersonHasAssociatedRecords(supabase, personId);
+  if (check.hasRecords) {
+    throw new Error(
+      `No se puede eliminar a esta persona porque tiene registros vinculados: ${check.reasons.join(', ')}. Debes eliminar o reasignar esos registros primero.`
+    );
+  }
+
+  const { error } = await supabase
+    .from('people')
+    .delete()
+    .eq('id', personId);
+
+  if (error) {
+    throw new Error(`Error al eliminar persona: ${error.message}`);
+  }
+}
+

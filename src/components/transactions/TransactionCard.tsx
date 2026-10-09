@@ -8,12 +8,14 @@ interface Props {
   transaction: TransactionWithDetails;
   onToggleInstallment: (installmentId: string, isPaid: boolean) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onEdit?: (transaction: TransactionWithDetails) => void;
 }
 
 export function TransactionCard({
   transaction,
   onToggleInstallment,
   onDelete,
+  onEdit,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -83,6 +85,16 @@ export function TransactionCard({
               {transaction.installments_count === 1 ? 'cuota' : 'cuotas'}
             </span>
           </div>
+
+          {onEdit && (
+            <button
+              onClick={() => onEdit(transaction)}
+              title="Editar compra"
+              className="text-zinc-500 hover:text-emerald-400 p-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors text-sm"
+            >
+              ✏️
+            </button>
+          )}
 
           <button
             onClick={handleDelete}

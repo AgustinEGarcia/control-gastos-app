@@ -5,9 +5,11 @@ import { createClient } from '@/lib/supabase/client';
 import {
   type TransactionWithDetails,
   type TransactionInput,
+  type UpdateTransactionInput,
   type Person,
   getTransactions,
   createTransactionWithInstallments,
+  updateTransaction,
   deleteTransaction,
   toggleInstallmentPaid,
   calculateTransactionSummaries,
@@ -25,6 +27,7 @@ import {
 import { TransactionSummaryCards } from '@/components/transactions/TransactionSummaryCards';
 import { TransactionCard } from '@/components/transactions/TransactionCard';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
+import { EditTransactionModal } from '@/components/transactions/EditTransactionModal';
 
 export default function TransaccionesPage() {
   const [transactions, setTransactions] = useState<TransactionWithDetails[]>([]);
@@ -32,6 +35,7 @@ export default function TransaccionesPage() {
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<TransactionWithDetails | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'own' | 'shared'>('all');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -149,6 +153,11 @@ export default function TransaccionesPage() {
     }
   };
 
+  const handleUpdateTransaction = async (id: string, input: UpdateTransactionInput) => {
+    await updateTransaction(supabase, id, input);
+    await loadData();
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1">
       {/* Header y Acción Principal */}
@@ -251,6 +260,7 @@ export default function TransaccionesPage() {
               transaction={tx}
               onToggleInstallment={handleToggleInstallment}
               onDelete={handleDeleteTransaction}
+              onEdit={(t) => setEditingTransaction(t)}
             />
           ))}
         </div>
@@ -266,6 +276,18 @@ export default function TransaccionesPage() {
           onCreatePerson={handleCreatePerson}
           onCancel={() => setIsFormOpen(false)}
           submitting={submitting}
+        />
+      )}
+
+      {/* Modal Editar Compra */}
+      {editingTransaction && (
+        <EditTransactionModal
+          transaction={editingTransaction}
+          paymentMethods={paymentMethods}
+          people={people}
+          isOpen={Boolean(editingTransaction)}
+          onClose={() => setEditingTransaction(null)}
+          onSave={handleUpdateTransaction}
         />
       )}
     </div>

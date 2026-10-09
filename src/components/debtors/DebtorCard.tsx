@@ -7,16 +7,19 @@ interface DebtorCardProps {
   debtor: DebtorAccount;
   onOpenPaymentModal: (debtor: DebtorAccount) => void;
   onDeletePayment: (paymentId: string) => Promise<void>;
+  onDeletePerson?: (personId: string) => Promise<void>;
 }
 
 export function DebtorCard({
   debtor,
   onOpenPaymentModal,
   onDeletePayment,
+  onDeletePerson,
 }: DebtorCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [copied, setCopied] = useState(false);
   const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
+  const [isDeletingPerson, setIsDeletingPerson] = useState(false);
 
   const formatMoney = (val: number) => {
     return new Intl.NumberFormat('es-AR', {
@@ -50,6 +53,26 @@ export function DebtorCard({
       } finally {
         setDeletingPaymentId(null);
       }
+    }
+  };
+
+  const handleDeletePersonClick = async () => {
+    if (!onDeletePerson) return;
+    if (
+      !confirm(
+        `¿Deseas eliminar a la persona "${debtor.person.name}"? Se verificará que no tenga ningún gasto o préstamo vinculado.`
+      )
+    )
+      return;
+
+    try {
+      setIsDeletingPerson(true);
+      await onDeletePerson(debtor.person.id);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error al eliminar persona.';
+      alert(msg);
+    } finally {
+      setIsDeletingPerson(false);
     }
   };
 
@@ -90,19 +113,33 @@ export function DebtorCard({
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={handleCopyLink}
-          title="Copiar enlace del portal público para esta persona"
-          className={`px-2.5 py-1.5 text-xs font-medium rounded-xl border transition-all flex items-center gap-1.5 ${
-            copied
-              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-              : 'bg-slate-950 text-indigo-400 hover:text-indigo-300 border-slate-800 hover:border-slate-700'
-          }`}
-        >
-          <span>{copied ? '✓' : '🔗'}</span>
-          <span>{copied ? '¡Copiado!' : 'Compartir'}</span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            title="Copiar enlace del portal público para esta persona"
+            className={`px-2.5 py-1.5 text-xs font-medium rounded-xl border transition-all flex items-center gap-1.5 ${
+              copied
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                : 'bg-slate-950 text-indigo-400 hover:text-indigo-300 border-slate-800 hover:border-slate-700'
+            }`}
+          >
+            <span>{copied ? '✓' : '🔗'}</span>
+            <span>{copied ? '¡Copiado!' : 'Compartir'}</span>
+          </button>
+
+          {onDeletePerson && (
+            <button
+              type="button"
+              onClick={handleDeletePersonClick}
+              disabled={isDeletingPerson}
+              title={`Eliminar persona (${debtor.person.name})`}
+              className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-slate-800 rounded-xl border border-transparent transition-all text-sm disabled:opacity-30"
+            >
+              {isDeletingPerson ? '...' : '🗑️'}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* DETALLES DE SALDO Y PROGRESO */}

@@ -112,3 +112,36 @@ export async function deletePaymentMethod(
     throw new Error(`Error al eliminar método de pago: ${error.message}`);
   }
 }
+
+export async function updatePaymentMethod(
+  supabase: SupabaseClient<Database>,
+  id: string,
+  input: Partial<PaymentMethodInput>
+): Promise<PaymentMethod> {
+  const updatePayload: any = {};
+  if (input.name !== undefined) updatePayload.name = input.name.trim();
+  if (input.is_own !== undefined) {
+    updatePayload.is_own = input.is_own;
+    updatePayload.owner_name = input.is_own === false ? input.owner_name?.trim() || null : null;
+  }
+  if (input.closing_day !== undefined) {
+    updatePayload.closing_day = input.closing_day ? Number(input.closing_day) : null;
+  }
+  if (input.due_day !== undefined) {
+    updatePayload.due_day = input.due_day ? Number(input.due_day) : null;
+  }
+
+  const { data, error } = await supabase
+    .from('payment_methods')
+    .update(updatePayload)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Error al actualizar método de pago: ${error?.message}`);
+  }
+
+  return data;
+}
+
