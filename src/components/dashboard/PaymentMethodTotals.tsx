@@ -37,19 +37,23 @@ export function PaymentMethodTotals({ totals, monthName }: Props) {
                 <span className="text-xs font-medium text-zinc-300 truncate">
                   {t.name}
                 </span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono">
-                  Débito este mes
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+                  t.totalAmount < 0
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : 'bg-zinc-800 text-zinc-400'
+                }`}>
+                  {t.totalAmount < 0 ? 'Crédito a favor' : 'Débito este mes'}
                 </span>
               </div>
 
-              <div className="text-lg font-bold font-mono text-white tracking-tight">
+              <div className={`text-lg font-bold font-mono tracking-tight ${t.totalAmount < 0 ? 'text-emerald-400' : 'text-white'}`}>
                 {formatCurrency(t.totalAmount)}
               </div>
             </div>
 
             <div className="mt-3 pt-2.5 border-t border-zinc-800/60 flex items-center justify-between text-[11px] text-zinc-400">
-              <span>
-                {t.totalInstallments > 0
+              <span className={t.totalInstallments < 0 ? 'text-emerald-400 font-medium' : ''}>
+                {t.totalInstallments !== 0
                   ? `Cuotas: ${formatCurrency(t.totalInstallments)}`
                   : 'Sin cuotas'}
               </span>

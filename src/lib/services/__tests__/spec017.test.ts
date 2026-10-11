@@ -161,6 +161,137 @@ describe('Spec 017 — Gestión de Resumen Real de Tarjetas (Cuotas Salteadas, D
       expect(totals[0].totalInstallments).toBe(15000);
       expect(totals[0].totalAmount).toBe(15000);
     });
+
+    it('debe sumar correctamente dos cuotas cobradas juntas en el mismo mes para la misma tarjeta (cuota doble)', () => {
+      // Compra en 3 cuotas donde la cuota 1 y cuota 2 se debitan juntas en octubre 2026
+      const doubleInstallmentTx: TransactionWithDetails = {
+        id: 'tx-doble',
+        user_id: 'usr-1',
+        description: 'Compra Electrodoméstico',
+        total_amount: 30000,
+        installments_count: 3,
+        purchase_date: '2026-09-15',
+        first_installment_date: '2026-10-10',
+        payment_method_id: 'pm-visa',
+        beneficiary_person_id: null,
+        payer_person_id: null,
+        created_at: '',
+        payment_method: { id: 'pm-visa', user_id: 'usr-1', name: 'Visa Gold', is_own: true, owner_name: null, closing_day: 25, due_day: 10, created_at: '' },
+        beneficiary: null,
+        installments: [
+          { id: 'inst-1', transaction_id: 'tx-doble', installment_number: 1, amount: 10000, due_date: '2026-10-10', is_paid: false, created_at: '' },
+          { id: 'inst-2', transaction_id: 'tx-doble', installment_number: 2, amount: 10000, due_date: '2026-10-10', is_paid: false, created_at: '' }, // ¡Segunda cuota cobrada en el mismo mes!
+          { id: 'inst-3', transaction_id: 'tx-doble', installment_number: 3, amount: 10000, due_date: '2026-11-10', is_paid: false, created_at: '' },
+        ],
+      };
+
+      const totals = calculatePaymentMethodMonthlyTotals(
+        [],
+        [doubleInstallmentTx],
+        2026,
+        10,
+        [{ id: 'pm-visa', name: 'Visa Gold' }]
+      );
+
+      // El total por tarjeta debe computar AMBAS cuotas: $10.000 + $10.000 = $20.000
+      expect(totals.length).toBe(1);
+      expect(totals[0].totalInstallments).toBe(20000);
+      expect(totals[0].totalAmount).toBe(20000);
+
+      // Y en el consolidado general también debe registrar ambas cuotas
+      const res = calculateMonthlyConsolidated([], [doubleInstallmentTx], 2026, 10);
+      expect(res.totalInstallmentsOwn).toBe(20000);
+      expect(res.totalOwnToPay).toBe(20000);
+      // Deben existir 2 ítems en el cronograma para ese mes
+      expect(res.items.filter((it) => it.transactionId === 'tx-doble').length).toBe(2);
+    });
+
+    it('debe calcular exactamente la combinación de cuota doble + reintegro + gasto fijo en la misma tarjeta', () => {
+      // 1. Tarjeta Santander con gasto fijo recurrente de $6.000
+      const fixedExpense = {
+        id: 'exp-1',
+        user_id: 'usr-1',
+        name: 'Seguro Celular',
+        category: 'Seguros',
+        estimated_amount: 6000,
+        actual_amount: 6000,
+        payment_day: 10,
+        payment_method_id: 'pm-santander',
+        is_active: true,
+        created_at: '',
+        payment_method: { id: 'pm-santander', user_id: 'usr-1', name: 'Santander Río', is_own: true, owner_name: null, closing_day: 25, due_day: 10, created_at: '' },
+      };
+
+      // 2. Compra con cuota doble: Cuota 2 ($8.000) y Cuota 3 ($8.000) en el mismo mes
+      const doubleTx: TransactionWithDetails = {
+        id: 'tx-cuotas',
+        user_id: 'usr-1',
+        description: 'Vuelos Bariloche',
+        total_amount: 24000,
+        installments_count: 3,
+        purchase_date: '2026-08-10',
+        first_installment_date: '2026-09-10',
+        payment_method_id: 'pm-santander',
+        beneficiary_person_id: null,
+        payer_person_id: null,
+        created_at: '',
+        payment_method: { id: 'pm-santander', user_id: 'usr-1', name: 'Santander Río', is_own: true, owner_name: null, closing_day: 25, due_day: 10, created_at: '' },
+        beneficiary: null,
+        installments: [
+          { id: 'inst-1', transaction_id: 'tx-cuotas', installment_number: 1, amount: 8000, due_date: '2026-09-10', is_paid: true, created_at: '' },
+          { id: 'inst-2', transaction_id: 'tx-cuotas', installment_number: 2, amount: 8000, due_date: '2026-10-10', is_paid: false, created_at: '' },
+          { id: 'inst-3', transaction_id: 'tx-cuotas', installment_number: 3, amount: 8000, due_date: '2026-10-10', is_paid: false, created_at: '' }, // cuota adelantada
+        ],
+      };
+
+      // 3. Reintegro promocional del banco en la misma tarjeta por $4.500
+      const refundTx: TransactionWithDetails = {
+        id: 'tx-refund',
+        user_id: 'usr-1',
+        description: '[REINTEGRO] Promo Combustible Santander',
+        total_amount: 4500,
+        installments_count: 1,
+        purchase_date: '2026-10-02',
+        first_installment_date: '2026-10-10',
+        payment_method_id: 'pm-santander',
+        beneficiary_person_id: null,
+        payer_person_id: null,
+        created_at: '',
+        payment_method: { id: 'pm-santander', user_id: 'usr-1', name: 'Santander Río', is_own: true, owner_name: null, closing_day: 25, due_day: 10, created_at: '' },
+        beneficiary: null,
+        installments: [
+          { id: 'inst-refund', transaction_id: 'tx-refund', installment_number: 1, amount: 4500, due_date: '2026-10-10', is_paid: false, created_at: '' },
+        ],
+      };
+
+      // Cálculo por tarjeta
+      const totals = calculatePaymentMethodMonthlyTotals(
+        [fixedExpense as any],
+        [doubleTx, refundTx],
+        2026,
+        10,
+        [{ id: 'pm-santander', name: 'Santander Río' }]
+      );
+
+      // Fijo: $6.000
+      // Cuotas netas: $8.000 + $8.000 - $4.500 = $11.500
+      // Total a pagar en la tarjeta Santander: $6.000 + $11.500 = $17.500
+      expect(totals.length).toBe(1);
+      expect(totals[0].totalRecurring).toBe(6000);
+      expect(totals[0].totalInstallments).toBe(11500);
+      expect(totals[0].totalAmount).toBe(17500);
+
+      // Cálculo en el consolidado general
+      const res = calculateMonthlyConsolidated(
+        [fixedExpense as any],
+        [doubleTx, refundTx],
+        2026,
+        10
+      );
+      expect(res.totalRecurring).toBe(6000);
+      expect(res.totalInstallmentsOwn).toBe(11500);
+      expect(res.totalOwnToPay).toBe(17500);
+    });
   });
 
   describe('Servicio de corrimiento de cuotas (shiftInstallmentMonth)', () => {
