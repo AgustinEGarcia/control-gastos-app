@@ -6,6 +6,7 @@ import { getRecurringExpenses, type RecurringExpense } from '@/lib/services/recu
 import {
   getTransactions,
   shiftInstallmentMonth,
+  advanceNextInstallmentToCurrentMonth,
   type TransactionWithDetails,
 } from '@/lib/services/transactions';
 import { getLoans, type LoanWithDetails } from '@/lib/services/loans';
@@ -172,6 +173,23 @@ export default function DashboardPage() {
     }
   };
 
+  const handleAdvanceNextInstallment = async (item: MonthlyDueItem) => {
+    if (!item.installmentId) return;
+    setShiftingId(item.id);
+    try {
+      const res = await advanceNextInstallmentToCurrentMonth(supabase, item.installmentId);
+      if (res.success) {
+        await loadData();
+      } else if (res.error) {
+        setErrorMsg(res.error);
+      }
+    } catch (err: any) {
+      setErrorMsg(`Error al agregar cuota doble: ${err.message}`);
+    } finally {
+      setShiftingId(null);
+    }
+  };
+
   const handleSaveVariableExpense = async (payload: {
     year: number;
     month: number;
@@ -281,6 +299,7 @@ export default function DashboardPage() {
               onEditVariable={() => setIsVarModalOpen(true)}
               togglingId={togglingId}
               onShiftInstallment={handleShiftInstallment}
+              onAdvanceNextInstallment={handleAdvanceNextInstallment}
               shiftingId={shiftingId}
             />
 

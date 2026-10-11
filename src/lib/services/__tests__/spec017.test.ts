@@ -4,6 +4,7 @@ import {
   isRefundTransaction,
   cleanRefundDescription,
   shiftInstallmentMonth,
+  advanceNextInstallmentToCurrentMonth,
   updateInstallmentDueDate,
   type TransactionWithDetails,
 } from '../transactions';
@@ -346,4 +347,104 @@ describe('Spec 017 — Gestión de Resumen Real de Tarjetas (Cuotas Salteadas, D
       expect(res.newDueDate).toBe('2026-12-10');
     });
   });
+
+  describe('Servicio de cobro doble (advanceNextInstallmentToCurrentMonth)', () => {
+    it('debe adelantar la siguiente cuota pendiente asignándole la fecha de la cuota actual', async () => {
+      const currentInst = {
+        id: 'inst-current',
+        transaction_id: 'tx-200',
+        installment_number: 1,
+        due_date: '2026-10-10',
+        is_paid: false,
+      };
+
+      const nextInst = {
+        id: 'inst-next',
+        transaction_id: 'tx-200',
+        installment_number: 2,
+        due_date: '2026-11-10',
+        is_paid: false,
+      };
+
+      let updatedPayload: any = null;
+      let updatedId: any = null;
+
+      const supabaseMock: any = {
+        from: vi.fn((table: string) => {
+          if (table === 'installments') {
+            return {
+              select: vi.fn().mockReturnThis(),
+              eq: vi.fn((field: string, val: any) => {
+                if (field === 'id' && val === 'inst-current') {
+                  return { single: vi.fn().mockResolvedValue({ data: currentInst, error: null }) };
+                }
+                // When selecting next installment:
+                return {
+                  gt: vi.fn().mockReturnThis(),
+                  eq: vi.fn().mockReturnThis(),
+                  order: vi.fn().mockReturnThis(),
+                  limit: vi.fn().mockReturnThis(),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: nextInst, error: null }),
+                };
+              }),
+              update: vi.fn((payload: any) => {
+                updatedPayload = payload;
+                return {
+                  eq: vi.fn((field: string, id: any) => {
+                    updatedId = id;
+                    return Promise.resolve({ error: null });
+                  }),
+                };
+              }),
+            };
+          }
+          return {};
+        }),
+      };
+
+      const result = await advanceNextInstallmentToCurrentMonth(supabaseMock, 'inst-current');
+      expect(result.success).toBe(true);
+      expect(result.advancedInstallmentNumber).toBe(2);
+      expect(updatedPayload).toEqual({ due_date: '2026-10-10' });
+      expect(updatedId).toBe('inst-next');
+    });
+
+    it('debe retornar error si no existen cuotas posteriores pendientes', async () => {
+      const lastInst = {
+        id: 'inst-last',
+        transaction_id: 'tx-200',
+        installment_number: 3,
+        due_date: '2026-10-10',
+        is_paid: false,
+      };
+
+      const supabaseMock: any = {
+        from: vi.fn((table: string) => {
+          if (table === 'installments') {
+            return {
+              select: vi.fn().mockReturnThis(),
+              eq: vi.fn((field: string, val: any) => {
+                if (field === 'id' && val === 'inst-last') {
+                  return { single: vi.fn().mockResolvedValue({ data: lastInst, error: null }) };
+                }
+                return {
+                  gt: vi.fn().mockReturnThis(),
+                  eq: vi.fn().mockReturnThis(),
+                  order: vi.fn().mockReturnThis(),
+                  limit: vi.fn().mockReturnThis(),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                };
+              }),
+            };
+          }
+          return {};
+        }),
+      };
+
+      const result = await advanceNextInstallmentToCurrentMonth(supabaseMock, 'inst-last');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('No hay más cuotas posteriores');
+    });
+  });
 });
+

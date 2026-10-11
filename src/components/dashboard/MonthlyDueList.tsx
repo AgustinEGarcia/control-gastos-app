@@ -11,6 +11,7 @@ interface MonthlyDueListProps {
   onEditVariable?: () => void;
   togglingId?: string | null;
   onShiftInstallment?: (item: MonthlyDueItem, monthsDelta: number) => Promise<void> | void;
+  onAdvanceNextInstallment?: (item: MonthlyDueItem) => Promise<void> | void;
   shiftingId?: string | null;
 }
 
@@ -22,6 +23,7 @@ export function MonthlyDueList({
   onEditVariable,
   togglingId,
   onShiftInstallment,
+  onAdvanceNextInstallment,
   shiftingId,
 }: MonthlyDueListProps) {
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'recurring' | 'own' | 'shared' | 'variable'>('all');
@@ -262,27 +264,44 @@ export function MonthlyDueList({
                     {item.isRefund ? `-${formatMoney(item.amount)}` : formatMoney(item.amount)}
                   </span>
 
-                  {/* ACCIONES DE CUOTA: SALTEAR MES O ADELANTAR */}
-                  {item.installmentId && onShiftInstallment && !item.isPaid && (
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        disabled={shiftingId === item.id || isProcessing}
-                        onClick={() => onShiftInstallment(item, 1)}
-                        className="px-2 py-1 rounded bg-slate-900 border border-slate-700/80 text-[11px] text-slate-300 hover:text-amber-300 hover:border-amber-500/40 transition-colors shadow-sm"
-                        title="La tarjeta no facturó esta cuota en este mes: postergarla al mes siguiente (+1 mes)"
-                      >
-                        {shiftingId === item.id ? '⏳' : '⏭️ Saltear (+1m)'}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={shiftingId === item.id || isProcessing}
-                        onClick={() => onShiftInstallment(item, -1)}
-                        className="px-2 py-1 rounded bg-slate-900 border border-slate-700/80 text-[11px] text-slate-400 hover:text-blue-300 hover:border-blue-500/40 transition-colors shadow-sm"
-                        title="Deshacer salteo o cobrar junto en este mes (-1 mes)"
-                      >
-                        ⏮️ -1m
-                      </button>
+                  {/* ACCIONES DE CUOTA: COBRO DOBLE Y SALTEO DE MES */}
+                  {item.installmentId && !item.isPaid && (
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                      {onAdvanceNextInstallment && item.installmentNumber && item.installmentsCount && item.installmentNumber < item.installmentsCount && (
+                        <button
+                          type="button"
+                          disabled={shiftingId === item.id || isProcessing}
+                          onClick={() => onAdvanceNextInstallment(item)}
+                          className="px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-[11px] font-semibold text-indigo-300 hover:bg-indigo-500/25 hover:text-indigo-200 transition-all shadow-sm flex items-center gap-1"
+                          title="La tarjeta cobró 2 cuotas juntas en este resumen: trae la siguiente cuota a este mismo mes para sumar el doble"
+                        >
+                          {shiftingId === item.id ? '⏳' : '⚡ Cobro doble (+1 cuota)'}
+                        </button>
+                      )}
+
+                      {onShiftInstallment && (
+                        <button
+                          type="button"
+                          disabled={shiftingId === item.id || isProcessing}
+                          onClick={() => onShiftInstallment(item, 1)}
+                          className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700/80 text-[11px] text-slate-300 hover:text-amber-300 hover:border-amber-500/40 transition-colors shadow-sm"
+                          title="La tarjeta no facturó esta cuota este mes: postergarla al mes siguiente (+1 mes)"
+                        >
+                          {shiftingId === item.id ? '⏳' : '⏭️ Saltear (+1m)'}
+                        </button>
+                      )}
+
+                      {onShiftInstallment && (
+                        <button
+                          type="button"
+                          disabled={shiftingId === item.id || isProcessing}
+                          onClick={() => onShiftInstallment(item, -1)}
+                          className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700/80 text-[11px] text-slate-400 hover:text-blue-300 hover:border-blue-500/40 transition-colors shadow-sm"
+                          title="Mover cuota al mes anterior (-1 mes)"
+                        >
+                          ⏮️ -1m
+                        </button>
+                      )}
                     </div>
                   )}
 

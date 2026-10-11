@@ -581,6 +581,56 @@ export async function shiftInstallmentMonth(
   }
 }
 
+export async function advanceNextInstallmentToCurrentMonth(
+  supabase: SupabaseClient<Database>,
+  installmentId: string
+): Promise<{ success: boolean; advancedInstallmentNumber?: number; error?: string }> {
+  try {
+    const { data: current, error: getErr } = await supabase
+      .from('installments')
+      .select('*')
+      .eq('id', installmentId)
+      .single();
+
+    if (getErr || !current) {
+      return { success: false, error: 'Cuota no encontrada.' };
+    }
+
+    const { data: nextInst, error: nextErr } = await supabase
+      .from('installments')
+      .select('*')
+      .eq('transaction_id', current.transaction_id)
+      .gt('installment_number', current.installment_number)
+      .eq('is_paid', false)
+      .order('installment_number', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (nextErr || !nextInst) {
+      return {
+        success: false,
+        error: 'No hay más cuotas posteriores pendientes en esta compra para cobrar en este mes.',
+      };
+    }
+
+    const { error: updErr } = await supabase
+      .from('installments')
+      .update({ due_date: current.due_date })
+      .eq('id', nextInst.id);
+
+    if (updErr) {
+      return { success: false, error: updErr.message };
+    }
+
+    return {
+      success: true,
+      advancedInstallmentNumber: nextInst.installment_number,
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 export async function updateInstallmentDueDate(
   supabase: SupabaseClient<Database>,
   installmentId: string,
@@ -600,4 +650,5 @@ export async function updateInstallmentDueDate(
     return { success: false, error: err.message };
   }
 }
+
 
