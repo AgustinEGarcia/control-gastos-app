@@ -26,6 +26,26 @@ export interface TransactionInput {
   first_installment_date: string;
   payment_method_id?: string | null;
   beneficiary_person_id?: string | null;
+  is_refund?: boolean;
+}
+
+export function isRefundTransaction(description: string | null | undefined): boolean {
+  return Boolean(description && (description.startsWith('[DEVOLUCIÓN]') || description.startsWith('[REINTEGRO]')));
+}
+
+export function cleanRefundDescription(description: string | null | undefined): string {
+  if (!description) return '';
+  return description.replace(/^\[(DEVOLUCIÓN|REINTEGRO)\]\s*/i, '');
+}
+
+export function addMonthsToDateString(dateStr: string, monthsDelta: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(y, m - 1 + monthsDelta, 1);
+  const newYear = date.getFullYear();
+  const newMonth = date.getMonth() + 1;
+  const maxDays = new Date(newYear, newMonth, 0).getDate();
+  const newDay = Math.min(d, maxDays);
+  return `${newYear}-${String(newMonth).padStart(2, '0')}-${String(newDay).padStart(2, '0')}`;
 }
 
 export interface ValidationResult {
@@ -245,12 +265,17 @@ export async function createTransactionWithInstallments(
     throw new Error(firstError);
   }
 
+  let finalDesc = input.description.trim();
+  if (input.is_refund && !finalDesc.startsWith('[DEVOLUCIÓN]')) {
+    finalDesc = `[DEVOLUCIÓN] ${finalDesc}`;
+  }
+
   // 1. Insertar transacción
   const { data: transaction, error: txError } = await supabase
     .from('transactions')
     .insert({
       user_id: userId,
-      description: input.description.trim(),
+      description: finalDesc,
       total_amount: Number(input.total_amount),
       installments_count: Number(input.installments_count),
       purchase_date: input.purchase_date,
@@ -330,6 +355,7 @@ export interface UpdateTransactionInput {
   purchase_date?: string;
   payment_method_id?: string | null;
   beneficiary_person_id?: string | null;
+  is_refund?: boolean;
 }
 
 export async function updateTransaction(
@@ -343,7 +369,7 @@ export async function updateTransaction(
     input.first_installment_date !== undefined;
 
   let currentTx: any = null;
-  if (needsScheduleRegeneration) {
+  if (needsScheduleRegeneration || input.is_refund !== undefined) {
     const { data, error: fetchErr } = await supabase
       .from('transactions')
       .select('*')
@@ -356,9 +382,23 @@ export async function updateTransaction(
     currentTx = data;
   }
 
+  // Filtrar is_refund del objeto update para no enviar columnas inexistentes a Postgres
+  const { is_refund, ...cleanPayload } = input;
+  let finalDescription = cleanPayload.description;
+
+  if (is_refund !== undefined && currentTx) {
+    const baseDesc = cleanRefundDescription(finalDescription ?? currentTx.description);
+    finalDescription = is_refund ? `[DEVOLUCIÓN] ${baseDesc}` : baseDesc;
+  }
+
+  const updateData: any = { ...cleanPayload };
+  if (finalDescription !== undefined) {
+    updateData.description = finalDescription;
+  }
+
   const { error } = await supabase
     .from('transactions')
-    .update(input)
+    .update(updateData)
     .eq('id', id);
 
   if (error) {
@@ -486,5 +526,78 @@ export async function updatePerson(
   }
 
   return data;
+}
+
+export async function shiftInstallmentMonth(
+  supabase: SupabaseClient<Database>,
+  installmentId: string,
+  monthsDelta: number,
+  shiftSubsequent: boolean = true
+): Promise<{ success: boolean; newDueDate?: string; error?: string }> {
+  try {
+    const { data: current, error: getErr } = await supabase
+      .from('installments')
+      .select('*')
+      .eq('id', installmentId)
+      .single();
+
+    if (getErr || !current) {
+      return { success: false, error: 'Cuota no encontrada.' };
+    }
+
+    const newDueDate = addMonthsToDateString(current.due_date, monthsDelta);
+
+    const { error: updErr } = await supabase
+      .from('installments')
+      .update({ due_date: newDueDate })
+      .eq('id', installmentId);
+
+    if (updErr) {
+      return { success: false, error: updErr.message };
+    }
+
+    if (shiftSubsequent) {
+      const { data: subsequent } = await supabase
+        .from('installments')
+        .select('*')
+        .eq('transaction_id', current.transaction_id)
+        .gt('installment_number', current.installment_number)
+        .order('installment_number', { ascending: true });
+
+      if (subsequent && subsequent.length > 0) {
+        for (const sub of subsequent) {
+          const subNewDate = addMonthsToDateString(sub.due_date, monthsDelta);
+          await supabase
+            .from('installments')
+            .update({ due_date: subNewDate })
+            .eq('id', sub.id);
+        }
+      }
+    }
+
+    return { success: true, newDueDate };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updateInstallmentDueDate(
+  supabase: SupabaseClient<Database>,
+  installmentId: string,
+  newDueDate: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('installments')
+      .update({ due_date: newDueDate })
+      .eq('id', installmentId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
 }
 

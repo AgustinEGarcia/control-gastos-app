@@ -10,6 +10,8 @@ interface MonthlyDueListProps {
   onTogglePaid?: (item: MonthlyDueItem) => Promise<void> | void;
   onEditVariable?: () => void;
   togglingId?: string | null;
+  onShiftInstallment?: (item: MonthlyDueItem, monthsDelta: number) => Promise<void> | void;
+  shiftingId?: string | null;
 }
 
 export function MonthlyDueList({
@@ -19,6 +21,8 @@ export function MonthlyDueList({
   onTogglePaid,
   onEditVariable,
   togglingId,
+  onShiftInstallment,
+  shiftingId,
 }: MonthlyDueListProps) {
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'recurring' | 'own' | 'shared' | 'variable'>('all');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('all');
@@ -203,26 +207,35 @@ export function MonthlyDueList({
 
                   <div>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      {item.type === 'recurring' && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                          Gasto Fijo
+                      {item.isRefund ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                          <span>🟢</span>
+                          <span>Devolución / Reintegro</span>
                         </span>
-                      )}
-                      {item.type === 'installment_own' && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                          Cuota Propia
-                        </span>
-                      )}
-                      {item.type === 'installment_shared' && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                          Compartido ({item.beneficiaryName})
-                        </span>
-                      )}
-                      {item.type === 'variable' && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
-                          <span>🛍️</span>
-                          <span>Gasto Variable</span>
-                        </span>
+                      ) : (
+                        <>
+                          {item.type === 'recurring' && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                              Gasto Fijo
+                            </span>
+                          )}
+                          {item.type === 'installment_own' && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                              Cuota Propia
+                            </span>
+                          )}
+                          {item.type === 'installment_shared' && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                              Compartido ({item.beneficiaryName})
+                            </span>
+                          )}
+                          {item.type === 'variable' && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
+                              <span>🛍️</span>
+                              <span>Gasto Variable</span>
+                            </span>
+                          )}
+                        </>
                       )}
 
                       <span className="text-xs text-slate-400">{item.details}</span>
@@ -245,9 +258,33 @@ export function MonthlyDueList({
                 </div>
 
                 <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-slate-800/80 pt-2 sm:pt-0 gap-2">
-                  <span className={`text-base font-bold tracking-tight ${item.isPaid ? 'text-emerald-400' : 'text-white'}`}>
-                    {formatMoney(item.amount)}
+                  <span className={`text-base font-bold tracking-tight ${item.isRefund ? 'text-emerald-400' : item.isPaid ? 'text-emerald-400' : 'text-white'}`}>
+                    {item.isRefund ? `-${formatMoney(item.amount)}` : formatMoney(item.amount)}
                   </span>
+
+                  {/* ACCIONES DE CUOTA: SALTEAR MES O ADELANTAR */}
+                  {item.installmentId && onShiftInstallment && !item.isPaid && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={shiftingId === item.id || isProcessing}
+                        onClick={() => onShiftInstallment(item, 1)}
+                        className="px-2 py-1 rounded bg-slate-900 border border-slate-700/80 text-[11px] text-slate-300 hover:text-amber-300 hover:border-amber-500/40 transition-colors shadow-sm"
+                        title="La tarjeta no facturó esta cuota en este mes: postergarla al mes siguiente (+1 mes)"
+                      >
+                        {shiftingId === item.id ? '⏳' : '⏭️ Saltear (+1m)'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={shiftingId === item.id || isProcessing}
+                        onClick={() => onShiftInstallment(item, -1)}
+                        className="px-2 py-1 rounded bg-slate-900 border border-slate-700/80 text-[11px] text-slate-400 hover:text-blue-300 hover:border-blue-500/40 transition-colors shadow-sm"
+                        title="Deshacer salteo o cobrar junto en este mes (-1 mes)"
+                      >
+                        ⏮️ -1m
+                      </button>
+                    </div>
+                  )}
 
                   {/* BOTÓN INTERACTIVO PARA MARCAR O DESMARCAR PAGO */}
                   {onTogglePaid ? (

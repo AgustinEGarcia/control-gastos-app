@@ -60,6 +60,7 @@ export function TransactionForm({
   const [paymentMethodId, setPaymentMethodId] = useState<string>('');
   const [isShared, setIsShared] = useState(false);
   const [selectedPersonId, setSelectedPersonId] = useState<string>('');
+  const [isRefund, setIsRefund] = useState(false);
 
   // Estados de Suscripción / Cargo Fijo
   const [subName, setSubName] = useState('');
@@ -145,6 +146,7 @@ export function TransactionForm({
       first_installment_date: firstInstallmentDate,
       payment_method_id: paymentMethodId ? paymentMethodId : null,
       beneficiary_person_id: isShared && selectedPersonId ? selectedPersonId : null,
+      is_refund: isRefund,
     };
 
     const validation = validateTransactionInput(input);
@@ -334,15 +336,38 @@ export function TransactionForm({
           ) : (
             /* Modo Compra en Cuotas Finitas */
             <>
+              {/* Selector de Devolución / Reintegro */}
+              <div className="p-3 rounded-xl bg-zinc-800/40 border border-zinc-700/60 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-white block">
+                    {isRefund ? '🟢 Operación: Devolución / Reintegro' : 'Operación: Compra / Financiación'}
+                  </span>
+                  <span className="text-[11px] text-zinc-400 block">
+                    {isRefund ? 'Restará del total a pagar de la tarjeta en el mes indicado' : 'Sumará a tus pagos en cuotas'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsRefund(!isRefund)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                    isRefund
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                      : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-white'
+                  }`}
+                >
+                  {isRefund ? '✓ Es Devolución' : '¿Es Devolución?'}
+                </button>
+              </div>
+
               <div>
                 <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-desc">
-                  Descripción de la Compra *
+                  {isRefund ? 'Descripción del Reintegro / Devolución *' : 'Descripción de la Compra *'}
                 </label>
                 <input
                   id="tx-desc"
                   type="text"
                   required
-                  placeholder="Ej: Celular Samsung, Pasajes, Supermercado"
+                  placeholder={isRefund ? 'Ej: Devolución zapatillas, Reintegro promoción' : 'Ej: Celular Samsung, Pasajes, Supermercado'}
                   value={description}
                   onChange={(e) => {
                     setDescription(e.target.value);

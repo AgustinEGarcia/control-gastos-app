@@ -1,5 +1,6 @@
 import type { RecurringExpense, RecurringExpenseWithMethod } from './recurringExpenses';
 import type { TransactionWithDetails } from './transactions';
+import { isRefundTransaction, cleanRefundDescription } from './transactions';
 import type { VariableMonthlyExpense } from './variableExpenses';
 
 export interface MonthlyDueItem {
@@ -15,6 +16,11 @@ export interface MonthlyDueItem {
   beneficiaryName?: string | null;
   paymentMethodId?: string | null;
   paymentMethodName?: string | null;
+  isRefund?: boolean;
+  installmentId?: string;
+  transactionId?: string;
+  installmentNumber?: number;
+  installmentsCount?: number;
 }
 
 export interface MonthlyConsolidatedSummary {
@@ -122,6 +128,9 @@ export function calculateMonthlyConsolidated(
 
   // 2. Procesar Cuotas de Compras con vencimiento en este mes
   for (const tx of transactions) {
+    const isRefund = isRefundTransaction(tx.description);
+    const cleanDesc = cleanRefundDescription(tx.description);
+
     for (const inst of tx.installments || []) {
       if (!inst.due_date) continue;
       const [instYear, instMonth, instDay] = inst.due_date.split('-').map(Number);
@@ -130,38 +139,59 @@ export function calculateMonthlyConsolidated(
         const amount = Number(inst.amount);
         const isShared = Boolean(tx.beneficiary_person_id);
         const txPmName = tx.payment_method?.name || null;
+        const displayTitle = isRefund
+          ? `${cleanDesc} (Devolución ${inst.installment_number}/${tx.installments_count})`
+          : `${tx.description} (Cuota ${inst.installment_number}/${tx.installments_count})`;
 
         if (isShared) {
-          totalSharedToCollect += amount;
+          if (isRefund) {
+            totalSharedToCollect -= amount;
+          } else {
+            totalSharedToCollect += amount;
+          }
           items.push({
             id: `inst-${inst.id}`,
             targetId: inst.id,
-            title: `${tx.description} (Cuota ${inst.installment_number}/${tx.installments_count})`,
+            installmentId: inst.id,
+            transactionId: tx.id,
+            installmentNumber: inst.installment_number,
+            installmentsCount: tx.installments_count,
+            title: displayTitle,
             type: 'installment_shared',
             amount,
             day: instDay,
             fullDate: inst.due_date,
             isPaid: Boolean(inst.is_paid),
-            details: txPmName || 'Tarjeta / Crédito',
+            details: isRefund ? `🟢 Devolución • ${txPmName || 'Tarjeta'}` : (txPmName || 'Tarjeta / Crédito'),
             beneficiaryName: tx.beneficiary?.name || 'Tercero',
             paymentMethodId: tx.payment_method_id || null,
             paymentMethodName: txPmName,
+            isRefund,
           });
         } else {
-          totalInstallmentsOwn += amount;
+          if (isRefund) {
+            totalInstallmentsOwn -= amount;
+          } else {
+            totalInstallmentsOwn += amount;
+          }
           items.push({
             id: `inst-${inst.id}`,
             targetId: inst.id,
-            title: `${tx.description} (Cuota ${inst.installment_number}/${tx.installments_count})`,
+            installmentId: inst.id,
+            transactionId: tx.id,
+            installmentNumber: inst.installment_number,
+            installmentsCount: tx.installments_count,
+            title: displayTitle,
             type: 'installment_own',
             amount,
             day: instDay,
             fullDate: inst.due_date,
             isPaid: Boolean(inst.is_paid),
-            details: txPmName || 'Tarjeta Propia',
+            details: isRefund ? `🟢 Devolución • ${txPmName || 'Tarjeta Propia'}` : (txPmName || 'Tarjeta Propia'),
             beneficiaryName: null,
             paymentMethodId: tx.payment_method_id || null,
             paymentMethodName: txPmName,
+            isRefund,
           });
         }
       }
@@ -193,13 +223,12 @@ export function calculateMonthlyConsolidated(
     });
   }
 
-
   // 4. Ordenar cronológicamente por día del mes
   items.sort((a, b) => a.day - b.day);
 
   // 5. Cálculos consolidados
-  const totalOwnToPay = Number((totalRecurring + totalInstallmentsOwn + totalVariable).toFixed(2));
-  const totalAllCommitments = Number((totalOwnToPay + totalSharedToCollect).toFixed(2));
+  const totalOwnToPay = Number(Math.max(0, totalRecurring + totalInstallmentsOwn + totalVariable).toFixed(2));
+  const totalAllCommitments = Number(Math.max(0, totalOwnToPay + Math.max(0, totalSharedToCollect)).toFixed(2));
 
   let paidCommitmentsAmount = 0;
   let paidCommitmentsCount = 0;
@@ -207,18 +236,25 @@ export function calculateMonthlyConsolidated(
 
   for (const it of items) {
     if (it.isPaid) {
-      paidCommitmentsAmount += it.amount;
-      paidCommitmentsCount += 1;
-      if (it.type !== 'installment_shared') {
-        paidOwnAmount += it.amount;
+      if (it.isRefund) {
+        paidCommitmentsAmount -= it.amount;
+        if (it.type !== 'installment_shared') {
+          paidOwnAmount -= it.amount;
+        }
+      } else {
+        paidCommitmentsAmount += it.amount;
+        if (it.type !== 'installment_shared') {
+          paidOwnAmount += it.amount;
+        }
       }
+      paidCommitmentsCount += 1;
     }
   }
 
-  paidOwnAmount = Number(paidOwnAmount.toFixed(2));
+  paidOwnAmount = Number(Math.max(0, paidOwnAmount).toFixed(2));
   const pendingOwnAmount = Number(Math.max(0, totalOwnToPay - paidOwnAmount).toFixed(2));
   const totalCommitmentsCount = items.length;
-  const pendingCommitmentsAmount = Number((totalAllCommitments - paidCommitmentsAmount).toFixed(2));
+  const pendingCommitmentsAmount = Number(Math.max(0, totalAllCommitments - paidCommitmentsAmount).toFixed(2));
   const percentageCompleted =
     totalCommitmentsCount > 0
       ? Math.min(100, Math.round((paidCommitmentsCount / totalCommitmentsCount) * 100))
@@ -255,11 +291,17 @@ export function calculateCardMonthlyCommitments(
   let totalInstallments = 0;
   for (const tx of transactions) {
     if (tx.payment_method_id !== paymentMethodId) continue;
+    const isRefund = isRefundTransaction(tx.description);
+
     for (const inst of tx.installments || []) {
       if (!inst.due_date) continue;
       const [instYear, instMonth] = inst.due_date.split('-').map(Number);
       if (instYear === year && instMonth === month) {
-        totalInstallments += Number(inst.amount);
+        if (isRefund) {
+          totalInstallments -= Number(inst.amount);
+        } else {
+          totalInstallments += Number(inst.amount);
+        }
       }
     }
   }
@@ -276,7 +318,7 @@ export function calculateCardMonthlyCommitments(
     paymentMethodId,
     totalInstallments: Number(totalInstallments.toFixed(2)),
     totalRecurring: Number(totalRecurring.toFixed(2)),
-    totalToPay: Number((totalInstallments + totalRecurring).toFixed(2)),
+    totalToPay: Number(Math.max(0, totalInstallments + totalRecurring).toFixed(2)),
     recurringExpenses: cardExpenses as RecurringExpenseWithMethod[],
   };
 }
@@ -306,6 +348,7 @@ export function calculatePaymentMethodMonthlyTotals(
     if (!tx.payment_method_id) continue;
     const pmId = tx.payment_method_id;
     const pmName = tx.payment_method?.name || methodMap.get(pmId)?.name || 'Método de Pago';
+    const isRefund = isRefundTransaction(tx.description);
 
     if (!methodMap.has(pmId)) {
       methodMap.set(pmId, { name: pmName, installments: 0, recurring: 0 });
@@ -316,7 +359,11 @@ export function calculatePaymentMethodMonthlyTotals(
       const [instYear, instMonth] = inst.due_date.split('-').map(Number);
       if (instYear === year && instMonth === month) {
         const entry = methodMap.get(pmId)!;
-        entry.installments += Number(inst.amount);
+        if (isRefund) {
+          entry.installments -= Number(inst.amount);
+        } else {
+          entry.installments += Number(inst.amount);
+        }
       }
     }
   }
@@ -341,7 +388,7 @@ export function calculatePaymentMethodMonthlyTotals(
   const results: PaymentMethodMonthlyTotal[] = [];
   for (const [pmId, data] of methodMap.entries()) {
     const totalAmount = Number((data.installments + data.recurring).toFixed(2));
-    if (totalAmount > 0) {
+    if (totalAmount !== 0) {
       results.push({
         paymentMethodId: pmId,
         name: data.name,

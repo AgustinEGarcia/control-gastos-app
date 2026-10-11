@@ -3,7 +3,11 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getRecurringExpenses, type RecurringExpense } from '@/lib/services/recurringExpenses';
-import { getTransactions, type TransactionWithDetails } from '@/lib/services/transactions';
+import {
+  getTransactions,
+  shiftInstallmentMonth,
+  type TransactionWithDetails,
+} from '@/lib/services/transactions';
 import { getLoans, type LoanWithDetails } from '@/lib/services/loans';
 import {
   getMonthlyExpensePayments,
@@ -41,6 +45,7 @@ export default function DashboardPage() {
   const [variableExpense, setVariableExpense] = useState<VariableMonthlyExpense | null>(null);
   const [isVarModalOpen, setIsVarModalOpen] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [shiftingId, setShiftingId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -147,6 +152,23 @@ export default function DashboardPage() {
       loadData();
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleShiftInstallment = async (item: MonthlyDueItem, monthsDelta: number) => {
+    if (!item.installmentId) return;
+    setShiftingId(item.id);
+    try {
+      const res = await shiftInstallmentMonth(supabase, item.installmentId, monthsDelta, true);
+      if (res.success) {
+        await loadData();
+      } else if (res.error) {
+        setErrorMsg(`No se pudo modificar la cuota: ${res.error}`);
+      }
+    } catch (err: any) {
+      setErrorMsg(`Error al mover la cuota: ${err.message}`);
+    } finally {
+      setShiftingId(null);
     }
   };
 
@@ -258,6 +280,8 @@ export default function DashboardPage() {
               onTogglePaid={handleTogglePaid}
               onEditVariable={() => setIsVarModalOpen(true)}
               togglingId={togglingId}
+              onShiftInstallment={handleShiftInstallment}
+              shiftingId={shiftingId}
             />
 
           </div>

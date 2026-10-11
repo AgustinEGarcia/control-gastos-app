@@ -7,7 +7,11 @@ import type {
   Person,
   UpdateTransactionInput,
 } from '@/lib/services/transactions';
-import { generateInstallmentSchedule } from '@/lib/services/transactions';
+import {
+  generateInstallmentSchedule,
+  isRefundTransaction,
+  cleanRefundDescription,
+} from '@/lib/services/transactions';
 import { formatCurrency } from '@/components/recurring-expenses/ExpenseSummaryCards';
 
 interface Props {
@@ -33,7 +37,8 @@ export function EditTransactionModal({
     transaction.purchase_date;
   const initialMonth = initialFirstDate.slice(0, 7);
 
-  const [description, setDescription] = useState(transaction.description);
+  const [isRefund, setIsRefund] = useState(isRefundTransaction(transaction.description));
+  const [description, setDescription] = useState(cleanRefundDescription(transaction.description));
   const [calcMode, setCalcMode] = useState<'total' | 'by_installment'>('total');
   const [totalAmount, setTotalAmount] = useState(String(transaction.total_amount));
   const [installmentsCount, setInstallmentsCount] = useState(String(transaction.installments_count));
@@ -106,6 +111,7 @@ export function EditTransactionModal({
         purchase_date: firstDate,
         payment_method_id: paymentMethodId ? paymentMethodId : null,
         beneficiary_person_id: isShared && beneficiaryId ? beneficiaryId : null,
+        is_refund: isRefund,
       });
       onClose();
     } catch (err: unknown) {
@@ -144,9 +150,32 @@ export function EditTransactionModal({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Switch de Devolución / Reintegro */}
+          <div className="p-3 rounded-xl bg-zinc-800/40 border border-zinc-700/60 flex items-center justify-between">
+            <div>
+              <span className="text-xs font-semibold text-white block">
+                {isRefund ? '🟢 Operación: Devolución / Reintegro' : 'Operación: Compra / Financiación'}
+              </span>
+              <span className="text-[11px] text-zinc-400 block">
+                {isRefund ? 'Restará del total a pagar de la tarjeta en el resumen mensual' : 'Sumará a tus gastos en cuotas'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsRefund(!isRefund)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                isRefund
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                  : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-white'
+              }`}
+            >
+              {isRefund ? '✓ Es Devolución' : '¿Es Devolución?'}
+            </button>
+          </div>
+
           <div>
             <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="edit-tx-desc">
-              Descripción de la Compra *
+              {isRefund ? 'Descripción del Reintegro / Devolución *' : 'Descripción de la Compra *'}
             </label>
             <input
               id="edit-tx-desc"

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import type { TransactionWithDetails } from '@/lib/services/transactions';
+import { isRefundTransaction, cleanRefundDescription } from '@/lib/services/transactions';
 import { formatCurrency } from '@/components/recurring-expenses/ExpenseSummaryCards';
 
 interface Props {
@@ -20,6 +21,9 @@ export function TransactionCard({
   const [expanded, setExpanded] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const isRefund = isRefundTransaction(transaction.description);
+  const displayTitle = cleanRefundDescription(transaction.description);
 
   const isShared = Boolean(transaction.beneficiary);
   const totalInstallments = transaction.installments.length;
@@ -52,15 +56,21 @@ export function TransactionCard({
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase ${
-                isShared
-                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                  : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-              }`}
-            >
-              {isShared ? `Prestada a: ${transaction.beneficiary?.name}` : 'Consumo Propio'}
-            </span>
+            {isRefund ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                <span>🟢</span> Devolución / Reintegro
+              </span>
+            ) : (
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase ${
+                  isShared
+                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                    : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                }`}
+              >
+                {isShared ? `Prestada a: ${transaction.beneficiary?.name}` : 'Consumo Propio'}
+              </span>
+            )}
             {transaction.payment_method && (
               <span className="text-xs text-zinc-400 flex items-center gap-1">
                 💳 {transaction.payment_method.name}
@@ -68,7 +78,7 @@ export function TransactionCard({
             )}
           </div>
           <h3 className="font-semibold text-white text-base">
-            {transaction.description}
+            {displayTitle}
           </h3>
           <span className="text-[11px] text-zinc-500">
             Comprado el {transaction.purchase_date}
@@ -77,8 +87,8 @@ export function TransactionCard({
 
         <div className="flex items-center gap-2">
           <div className="text-right">
-            <span className="font-mono text-base font-bold text-white block">
-              {formatCurrency(Number(transaction.total_amount))}
+            <span className={`font-mono text-base font-bold block ${isRefund ? 'text-emerald-400' : 'text-white'}`}>
+              {isRefund ? `-${formatCurrency(Number(transaction.total_amount))}` : formatCurrency(Number(transaction.total_amount))}
             </span>
             <span className="text-[11px] text-zinc-400 font-mono">
               {transaction.installments_count}{' '}
