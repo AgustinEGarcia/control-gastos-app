@@ -17,9 +17,15 @@ import {
   type VariableMonthlyExpense,
   type VariableExpenseItem,
 } from '@/lib/services/variableExpenses';
-import { calculateMonthlyConsolidated, getMonthName, type MonthlyDueItem } from '@/lib/services/dashboard';
+import {
+  calculateMonthlyConsolidated,
+  calculatePaymentMethodMonthlyTotals,
+  getMonthName,
+  type MonthlyDueItem,
+} from '@/lib/services/dashboard';
 import { MonthSelector } from '@/components/dashboard/MonthSelector';
 import { DashboardMetricCards } from '@/components/dashboard/DashboardMetricCards';
+import { PaymentMethodTotals } from '@/components/dashboard/PaymentMethodTotals';
 import { MonthlyDueList } from '@/components/dashboard/MonthlyDueList';
 import { VariableExpenseModal } from '@/components/dashboard/VariableExpenseModal';
 
@@ -79,6 +85,15 @@ export default function DashboardPage() {
       variableExpense
     );
   }, [expenses, transactions, selectedYear, selectedMonth, expensePayments, variableExpense]);
+
+  const paymentMethodTotals = useMemo(() => {
+    return calculatePaymentMethodMonthlyTotals(
+      expenses,
+      transactions,
+      selectedYear,
+      selectedMonth
+    );
+  }, [expenses, transactions, selectedYear, selectedMonth]);
 
   const totalLentPending = useMemo(() => {
     return lentLoans
@@ -228,6 +243,12 @@ export default function DashboardPage() {
           <div className="space-y-8">
             {/* CARDS KPIS CON LAS 4 MÉTRICAS (TOTAL, PAGADO, PENDIENTE, A COBRAR) */}
             <DashboardMetricCards summary={summary} totalLentPending={totalLentPending} />
+
+            {/* TOTALES POR MÉTODO DE PAGO / TARJETA EN EL MES */}
+            <PaymentMethodTotals
+              totals={paymentMethodTotals}
+              monthName={`${getMonthName(selectedMonth)} ${selectedYear}`}
+            />
 
             {/* CRONOGRAMA DE VENCIMIENTOS Y ACCIONES DE PAGO */}
             <MonthlyDueList

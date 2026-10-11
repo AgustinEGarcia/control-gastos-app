@@ -43,6 +43,7 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/transacciones') ||
     request.nextUrl.pathname.startsWith('/prestamos') ||
     request.nextUrl.pathname.startsWith('/deudores') ||
+    request.nextUrl.pathname.startsWith('/personas') ||
     request.nextUrl.pathname.startsWith('/alertas');
 
   // Redirigir a login si intenta ingresar a una ruta protegida sin sesión

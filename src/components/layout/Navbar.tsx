@@ -116,6 +116,16 @@ export function Navbar() {
               Deudores
             </a>
             <a
+              href="/personas"
+              className={`px-3 py-1.5 rounded-md transition-colors ${
+                pathname === '/personas'
+                  ? 'bg-zinc-800 text-white font-medium'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+              }`}
+            >
+              Personas
+            </a>
+            <a
               href="/alertas"
               className={`px-3 py-1.5 rounded-md transition-colors ${
                 pathname === '/alertas'

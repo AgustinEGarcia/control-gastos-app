@@ -46,10 +46,13 @@ export function TransactionForm({
 
   // Modo del formulario: Cuotas o Suscripción permanente
   const [mode, setMode] = useState<'installment' | 'subscription'>('installment');
+  // Modo de cálculo en cuotas: por monto total o por monto de cuota
+  const [calcMode, setCalcMode] = useState<'total' | 'by_installment'>('total');
 
   // Estados de Compra en Cuotas
   const [description, setDescription] = useState('');
   const [totalAmount, setTotalAmount] = useState('');
+  const [installmentAmount, setInstallmentAmount] = useState('');
   const [installmentsCount, setInstallmentsCount] = useState('1');
   const [purchaseDate, setPurchaseDate] = useState(today);
   const [firstInstallmentDate, setFirstInstallmentDate] = useState(today);
@@ -349,27 +352,98 @@ export function TransactionForm({
                 {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description}</p>}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-amount">
-                    Monto Total ($) *
-                  </label>
-                  <input
-                    id="tx-amount"
-                    type="number"
-                    step="0.01"
-                    min={0.01}
-                    required
-                    placeholder="Ej: 120000"
-                    value={totalAmount}
-                    onChange={(e) => {
-                      setTotalAmount(e.target.value);
-                      if (errors.total_amount) setErrors((prev) => ({ ...prev, total_amount: '' }));
+              {/* Selector de Modo de Cálculo: Por Total o Por Cuota */}
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-zinc-400 font-medium">Modo de cálculo:</span>
+                <div className="flex bg-zinc-800 p-0.5 rounded-lg border border-zinc-700">
+                  <button
+                    type="button"
+                    onClick={() => setCalcMode('total')}
+                    className={`px-2.5 py-1 rounded-md font-medium transition-all ${
+                      calcMode === 'total'
+                        ? 'bg-emerald-500 text-zinc-950 shadow-sm'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Por Monto Total
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCalcMode('by_installment');
+                      const total = parseFloat(totalAmount);
+                      const count = parseInt(installmentsCount, 10);
+                      if (!isNaN(total) && total > 0 && !isNaN(count) && count > 0) {
+                        setInstallmentAmount((total / count).toFixed(2));
+                      }
                     }}
-                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                  />
-                  {errors.total_amount && <p className="text-red-400 text-xs mt-1">{errors.total_amount}</p>}
+                    className={`px-2.5 py-1 rounded-md font-medium transition-all ${
+                      calcMode === 'by_installment'
+                        ? 'bg-emerald-500 text-zinc-950 shadow-sm'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Por Valor de Cuota
+                  </button>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {calcMode === 'total' ? (
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-amount">
+                      Monto Total ($) *
+                    </label>
+                    <input
+                      id="tx-amount"
+                      type="number"
+                      step="0.01"
+                      min={0.01}
+                      required
+                      placeholder="Ej: 120000"
+                      value={totalAmount}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setTotalAmount(val);
+                        const count = parseInt(installmentsCount, 10);
+                        if (val && !isNaN(Number(val)) && !isNaN(count) && count > 0) {
+                          setInstallmentAmount((Number(val) / count).toFixed(2));
+                        }
+                        if (errors.total_amount) setErrors((prev) => ({ ...prev, total_amount: '' }));
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    />
+                    {errors.total_amount && <p className="text-red-400 text-xs mt-1">{errors.total_amount}</p>}
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-installment-amount">
+                      Monto de Cada Cuota ($) *
+                    </label>
+                    <input
+                      id="tx-installment-amount"
+                      type="number"
+                      step="0.01"
+                      min={0.01}
+                      required
+                      placeholder="Ej: 10000"
+                      value={installmentAmount}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setInstallmentAmount(val);
+                        const count = parseInt(installmentsCount, 10);
+                        if (val && !isNaN(Number(val)) && !isNaN(count) && count > 0) {
+                          setTotalAmount((Number(val) * count).toFixed(2));
+                        } else {
+                          setTotalAmount('');
+                        }
+                        if (errors.total_amount) setErrors((prev) => ({ ...prev, total_amount: '' }));
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    />
+                    {errors.total_amount && <p className="text-red-400 text-xs mt-1">{errors.total_amount}</p>}
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-installments">
@@ -383,7 +457,20 @@ export function TransactionForm({
                     required
                     value={installmentsCount}
                     onChange={(e) => {
-                      setInstallmentsCount(e.target.value);
+                      const countVal = e.target.value;
+                      setInstallmentsCount(countVal);
+                      const count = parseInt(countVal, 10);
+                      if (calcMode === 'by_installment') {
+                        const instVal = parseFloat(installmentAmount);
+                        if (!isNaN(instVal) && !isNaN(count) && count > 0) {
+                          setTotalAmount((instVal * count).toFixed(2));
+                        }
+                      } else {
+                        const totVal = parseFloat(totalAmount);
+                        if (!isNaN(totVal) && !isNaN(count) && count > 0) {
+                          setInstallmentAmount((totVal / count).toFixed(2));
+                        }
+                      }
                       if (errors.installments_count) setErrors((prev) => ({ ...prev, installments_count: '' }));
                     }}
                     className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
@@ -392,11 +479,16 @@ export function TransactionForm({
                 </div>
               </div>
 
-              {/* Vista previa del valor de la cuota */}
+              {/* Vista previa del valor de la cuota o total */}
               {previewInstallments.length > 0 && (
                 <div className="p-3 rounded-xl bg-zinc-800/40 border border-zinc-800 text-xs flex items-center justify-between">
-                  <span className="text-zinc-400">Plan de cuotas:</span>
-                  <span className="font-mono text-emerald-400 font-semibold">
+                  <div className="flex flex-col">
+                    <span className="text-zinc-400">Plan de financiación:</span>
+                    <span className="text-[11px] text-zinc-500">
+                      Total: {formatCurrency(Number(totalAmount) || 0)}
+                    </span>
+                  </div>
+                  <span className="font-mono text-emerald-400 font-semibold text-sm">
                     {previewInstallments.length} {previewInstallments.length === 1 ? 'pago' : 'cuotas'} de{' '}
                     {formatCurrency(previewInstallments[0].amount)}
                   </span>
@@ -449,8 +541,10 @@ export function TransactionForm({
                     onChange={(e) => setFirstInstallmentDate(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                   />
+                  <p className="text-[10px] text-zinc-500 mt-1">Mes que entra la 1ª cuota</p>
                 </div>
               </div>
+
 
               {/* Sección de Consumo Prestado a Tercero */}
               <div className="p-4 rounded-xl bg-zinc-800/50 border border-zinc-800">

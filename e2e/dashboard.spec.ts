@@ -6,7 +6,7 @@ test.describe('Módulo de Dashboard Consolidado Mensual 360° (Spec 008)', () =>
   }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Control total de tus');
-    const loginLink = page.getByRole('link', { name: 'Iniciar Sesión' });
+    const loginLink = page.getByRole('link', { name: 'Iniciar Sesión' }).first();
     await expect(loginLink).toBeVisible();
   });
 

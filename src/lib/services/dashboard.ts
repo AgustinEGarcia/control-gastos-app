@@ -266,3 +266,78 @@ export function calculateCardMonthlyCommitments(
     recurringExpenses: cardExpenses as RecurringExpenseWithMethod[],
   };
 }
+
+export interface PaymentMethodMonthlyTotal {
+  paymentMethodId: string;
+  name: string;
+  totalInstallments: number;
+  totalRecurring: number;
+  totalAmount: number;
+}
+
+export function calculatePaymentMethodMonthlyTotals(
+  expenses: (RecurringExpense | RecurringExpenseWithMethod)[],
+  transactions: TransactionWithDetails[],
+  year: number,
+  month: number,
+  paymentMethods: { id: string; name: string }[] = []
+): PaymentMethodMonthlyTotal[] {
+  const methodMap = new Map<string, { name: string; installments: number; recurring: number }>();
+
+  for (const pm of paymentMethods) {
+    methodMap.set(pm.id, { name: pm.name, installments: 0, recurring: 0 });
+  }
+
+  for (const tx of transactions) {
+    if (!tx.payment_method_id) continue;
+    const pmId = tx.payment_method_id;
+    const pmName = tx.payment_method?.name || methodMap.get(pmId)?.name || 'Método de Pago';
+
+    if (!methodMap.has(pmId)) {
+      methodMap.set(pmId, { name: pmName, installments: 0, recurring: 0 });
+    }
+
+    for (const inst of tx.installments || []) {
+      if (!inst.due_date) continue;
+      const [instYear, instMonth] = inst.due_date.split('-').map(Number);
+      if (instYear === year && instMonth === month) {
+        const entry = methodMap.get(pmId)!;
+        entry.installments += Number(inst.amount);
+      }
+    }
+  }
+
+  for (const exp of expenses) {
+    if (!exp.is_active || !exp.payment_method_id) continue;
+    const pmId = exp.payment_method_id;
+    const pmName =
+      ('payment_method' in exp && exp.payment_method?.name) ||
+      methodMap.get(pmId)?.name ||
+      'Método de Pago';
+
+    if (!methodMap.has(pmId)) {
+      methodMap.set(pmId, { name: pmName, installments: 0, recurring: 0 });
+    }
+
+    const entry = methodMap.get(pmId)!;
+    const amount = Number(exp.actual_amount ?? exp.estimated_amount);
+    entry.recurring += amount;
+  }
+
+  const results: PaymentMethodMonthlyTotal[] = [];
+  for (const [pmId, data] of methodMap.entries()) {
+    const totalAmount = Number((data.installments + data.recurring).toFixed(2));
+    if (totalAmount > 0) {
+      results.push({
+        paymentMethodId: pmId,
+        name: data.name,
+        totalInstallments: Number(data.installments.toFixed(2)),
+        totalRecurring: Number(data.recurring.toFixed(2)),
+        totalAmount,
+      });
+    }
+  }
+
+  return results.sort((a, b) => b.totalAmount - a.totalAmount);
+}
+

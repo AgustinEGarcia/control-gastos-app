@@ -2,11 +2,11 @@
 Memoria del proyecto entre sesiones. Máximo ~50 líneas: resumir o eliminar lo que ya no aporte.
 
 ## Estado actual
-- Specs 001 a 014 completadas y probadas al 100%.
+- Specs 001 a 015 completadas y probadas al 100%.
 - Base de datos Supabase: Esquema incluye `monthly_expense_payments` y `variable_monthly_expenses` (con fallback local resiliente Zero Downtime).
-- Vistas activas: Dashboard (`/dashboard`), Landing (`/`), Login (`/login`), Actualizar Clave (`/actualizar-contrasena`), Métodos de Pago (`/metodos-pago`), Gastos Fijos (`/gastos-recurrentes`), Tarjetas/Cuotas (`/transacciones`), Préstamos (`/prestamos`), Deudores (`/deudores`), Portal Público (`/estado-cuenta/[id]`) y Alertas (`/alertas`).
-- Suite de pruebas: 93 pruebas unitarias con Vitest y 25 pruebas E2E con Playwright 100% en verde.
-- Spec 014: Edición completa de entidades (gastos fijos, préstamos personales, compras en cuotas, métodos de pago) y eliminación segura de personas con verificación preventiva de vínculos.
+- Vistas activas: Dashboard (`/dashboard`), Landing (`/`), Login (`/login`), Actualizar Clave (`/actualizar-contrasena`), Métodos de Pago (`/metodos-pago`), Gastos Fijos (`/gastos-recurrentes`), Tarjetas/Cuotas (`/transacciones`), Préstamos (`/prestamos`), Deudores (`/deudores`), Personas (`/personas`), Portal Público (`/estado-cuenta/[id]`) y Alertas (`/alertas`).
+- Suite de pruebas: 96 pruebas unitarias con Vitest y 28 pruebas E2E con Playwright 100% en verde.
+- Spec 015: Formato de renglones/lista y filtro por tarjeta en `/transacciones`, cálculo dual (Total vs Cuota) y primer vencimiento, bloque de totales por método de pago en `/dashboard` y módulo completo de ABM en `/personas`.
 
 ## Protocolo Obligatorio ante Nuevos Requerimientos (Interactivo SDD)
 1. Explicar qué se entendió y cuál será la modificación exacta prevista.

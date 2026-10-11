@@ -407,3 +407,35 @@ export async function deletePerson(
   }
 }
 
+export interface UpdatePersonInput {
+  name: string;
+  email?: string | null;
+}
+
+export async function updatePerson(
+  supabase: SupabaseClient<Database>,
+  personId: string,
+  input: UpdatePersonInput
+): Promise<Person> {
+  const cleanName = input.name?.trim();
+  if (!cleanName) {
+    throw new Error('El nombre de la persona es obligatorio.');
+  }
+
+  const { data, error } = await supabase
+    .from('people')
+    .update({
+      name: cleanName,
+      email: input.email?.trim() || null,
+    })
+    .eq('id', personId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Error al actualizar persona: ${error.message}`);
+  }
+
+  return data;
+}
+
