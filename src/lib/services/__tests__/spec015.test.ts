@@ -100,6 +100,9 @@ describe('Spec 015: Servicios de Transacciones, Totales y Personas', () => {
           purchase_date: '2026-10-01',
           payment_method_id: 'pm-visa',
           beneficiary_person_id: null,
+          beneficiary: null,
+          first_installment_date: '2026-10-05',
+          payer_person_id: null,
           created_at: '',
           payment_method: {
             id: 'pm-visa',
