@@ -21,3 +21,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **Commits**: Usar OBLIGATORIAMENTE Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`).
 - **Seguridad**: PROHIBIDO hardcodear credenciales. Usar variables de entorno y sanitizar inputs (Zero Trust).
 - **Calidad**: Mantener pruebas unitarias (Vitest) y E2E (Playwright) al 100% verdes.
+- **Modo Continuo Autónomo**: Si el usuario indica "continúa hasta el final" (o equivalente), el agente debe ejecutar de forma continua y autónoma todas las etapas SDD pendientes (`spec.md` -> `plan.md` -> `tasks.md` -> código -> pruebas -> commit y push a producción). El agente irá reportando cada fase terminada ("Terminé fase X, continúo con fase Y") sin frenar el flujo, deteniéndose ÚNICAMENTE ante un error o duda crítica, y avisando al usuario cuando todo esté en producción.

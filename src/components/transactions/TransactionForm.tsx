@@ -54,8 +54,9 @@ export function TransactionForm({
   const [totalAmount, setTotalAmount] = useState('');
   const [installmentAmount, setInstallmentAmount] = useState('');
   const [installmentsCount, setInstallmentsCount] = useState('1');
-  const [purchaseDate, setPurchaseDate] = useState(today);
-  const [firstInstallmentDate, setFirstInstallmentDate] = useState(today);
+  const [startMonth, setStartMonth] = useState(today.slice(0, 7));
+  const [purchaseDate, setPurchaseDate] = useState(`${today.slice(0, 7)}-01`);
+  const [firstInstallmentDate, setFirstInstallmentDate] = useState(`${today.slice(0, 7)}-01`);
   const [paymentMethodId, setPaymentMethodId] = useState<string>('');
   const [isShared, setIsShared] = useState(false);
   const [selectedPersonId, setSelectedPersonId] = useState<string>('');
@@ -514,36 +515,30 @@ export function TransactionForm({
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-purchase-date">
-                    Fecha de Compra *
-                  </label>
-                  <input
-                    id="tx-purchase-date"
-                    type="date"
-                    required
-                    value={purchaseDate}
-                    onChange={(e) => setPurchaseDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-first-inst">
-                    Primer Vencimiento *
-                  </label>
-                  <input
-                    id="tx-first-inst"
-                    type="date"
-                    required
-                    value={firstInstallmentDate}
-                    onChange={(e) => setFirstInstallmentDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                  />
-                  <p className="text-[10px] text-zinc-500 mt-1">Mes que entra la 1ª cuota</p>
-                </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="tx-start-month">
+                  Mes en el que se paga la 1ª Cuota *
+                </label>
+                <input
+                  id="tx-start-month"
+                  type="month"
+                  required
+                  value={startMonth}
+                  onChange={(e) => {
+                    const ym = e.target.value;
+                    setStartMonth(ym);
+                    if (ym) {
+                      setFirstInstallmentDate(`${ym}-01`);
+                      setPurchaseDate(`${ym}-01`);
+                    }
+                  }}
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                />
+                <p className="text-[11px] text-zinc-400 mt-1">
+                  📅 Selecciona simplemente el mes de inicio. Las cuotas se programarán correlativamente a partir de ese mes sin desfasajes de cierre.
+                </p>
               </div>
+
 
 
               {/* Sección de Consumo Prestado a Tercero */}

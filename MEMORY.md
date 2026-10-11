@@ -2,18 +2,19 @@
 Memoria del proyecto entre sesiones. Máximo ~50 líneas: resumir o eliminar lo que ya no aporte.
 
 ## Estado actual
-- Specs 001 a 015 completadas y probadas al 100%.
+- Specs 001 a 016 completadas y probadas al 100%.
 - Base de datos Supabase: Esquema incluye `monthly_expense_payments` y `variable_monthly_expenses` (con fallback local resiliente Zero Downtime).
 - Vistas activas: Dashboard (`/dashboard`), Landing (`/`), Login (`/login`), Actualizar Clave (`/actualizar-contrasena`), Métodos de Pago (`/metodos-pago`), Gastos Fijos (`/gastos-recurrentes`), Tarjetas/Cuotas (`/transacciones`), Préstamos (`/prestamos`), Deudores (`/deudores`), Personas (`/personas`), Portal Público (`/estado-cuenta/[id]`) y Alertas (`/alertas`).
-- Suite de pruebas: 96 pruebas unitarias con Vitest y 28 pruebas E2E con Playwright 100% en verde.
-- Spec 015: Formato de renglones/lista y filtro por tarjeta en `/transacciones`, cálculo dual (Total vs Cuota) y primer vencimiento, bloque de totales por método de pago en `/dashboard` y módulo completo de ABM en `/personas`.
+- Suite de pruebas: 98 pruebas unitarias con Vitest y 28 pruebas E2E con Playwright 100% en verde.
+- Spec 016: Doble filtro en Dashboard (Estado/Tipo + Tarjeta), selección simplificada de mes de débito de 1ª cuota (`YYYY-MM`) y edición integral de compras con regeneración automática de cuotas en `EditTransactionModal`.
 
 ## Protocolo Obligatorio ante Nuevos Requerimientos (Interactivo SDD)
 1. Explicar qué se entendió y cuál será la modificación exacta prevista.
 2. Mostrar paso a paso cada etapa SDD (`spec.md` -> `plan.md` -> `tasks.md`), pidiendo confirmación al usuario tras cada una.
 3. Mostrar qué archivos y componentes se modificarán.
 4. Modificar código SOLO tras el OK expreso del usuario.
-5. Ejecutar pruebas, reportar resultados y commitear con Conventional Commits tras el visto bueno.
+5. Si el usuario indica "continúa hasta el final", avanzar autónomamente por todas las fases SDD, pruebas, commit y push a producción de corrido, avisando cada fase terminada y frenando solo ante errores.
+6. Ejecutar pruebas, reportar resultados y commitear con Conventional Commits tras el visto bueno.
 
 ## Aprendizajes y errores a evitar
 - PostgREST Relationships: Con FKs múltiples, usar sintaxis explícita con fallback en memoria.

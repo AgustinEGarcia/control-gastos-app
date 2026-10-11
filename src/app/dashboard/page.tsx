@@ -254,10 +254,12 @@ export default function DashboardPage() {
             <MonthlyDueList
               items={summary.items}
               monthName={`${getMonthName(selectedMonth)} ${selectedYear}`}
+              paymentMethods={paymentMethodTotals.map((t) => ({ id: t.paymentMethodId, name: t.name }))}
               onTogglePaid={handleTogglePaid}
               onEditVariable={() => setIsVarModalOpen(true)}
               togglingId={togglingId}
             />
+
           </div>
         )}
 

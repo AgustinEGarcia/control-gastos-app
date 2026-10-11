@@ -12,3 +12,4 @@
 4. Modificar el código fuente **únicamente** cuando el usuario dé el OK.
 5. Ejecutar `npm test` y pruebas E2E, reportar estado y commitear tras aprobación.
 6. Mantener `MEMORY.md` actualizado (~50 líneas).
+7. **Modo Continuo Autónomo**: Ante la indicación "continúa hasta el final" (o similar), ejecutar todas las fases SDD, pruebas, commit y despliegue sin detenerse, reportando los avances ("Terminé fase X, continúo con fase Y") y frenando únicamente ante errores o dudas indispensables.

@@ -324,6 +324,9 @@ export async function deleteTransaction(
 
 export interface UpdateTransactionInput {
   description?: string;
+  total_amount?: number;
+  installments_count?: number;
+  first_installment_date?: string;
   purchase_date?: string;
   payment_method_id?: string | null;
   beneficiary_person_id?: string | null;
@@ -334,6 +337,25 @@ export async function updateTransaction(
   id: string,
   input: UpdateTransactionInput
 ): Promise<void> {
+  const needsScheduleRegeneration =
+    input.total_amount !== undefined ||
+    input.installments_count !== undefined ||
+    input.first_installment_date !== undefined;
+
+  let currentTx: any = null;
+  if (needsScheduleRegeneration) {
+    const { data, error: fetchErr } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchErr || !data) {
+      throw new Error(`Error al obtener transacción original: ${fetchErr?.message || 'No encontrada'}`);
+    }
+    currentTx = data;
+  }
+
   const { error } = await supabase
     .from('transactions')
     .update(input)
@@ -342,7 +364,34 @@ export async function updateTransaction(
   if (error) {
     throw new Error(`Error al actualizar transacción: ${error.message}`);
   }
+
+  if (needsScheduleRegeneration && currentTx) {
+    const finalAmount = Number(input.total_amount ?? currentTx.total_amount);
+    const finalCount = Number(input.installments_count ?? currentTx.installments_count);
+    const finalFirstDate = input.first_installment_date ?? currentTx.first_installment_date;
+
+    if (finalAmount > 0 && finalCount >= 1 && finalFirstDate) {
+      // 1. Eliminar cuotas anteriores
+      await supabase.from('installments').delete().eq('transaction_id', id);
+
+      // 2. Generar e insertar nuevo cronograma
+      const schedule = generateInstallmentSchedule(finalAmount, finalCount, finalFirstDate);
+      const newInstallments = schedule.map((item) => ({
+        transaction_id: id,
+        installment_number: item.installment_number,
+        amount: item.amount,
+        due_date: item.due_date,
+        is_paid: false,
+      }));
+
+      const { error: instError } = await supabase.from('installments').insert(newInstallments);
+      if (instError) {
+        throw new Error(`Error al regenerar cuotas: ${instError.message}`);
+      }
+    }
+  }
 }
+
 
 export async function checkPersonHasAssociatedRecords(
   supabase: SupabaseClient<Database>,

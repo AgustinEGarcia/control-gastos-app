@@ -6,6 +6,7 @@ import type { MonthlyDueItem } from '@/lib/services/dashboard';
 interface MonthlyDueListProps {
   items: MonthlyDueItem[];
   monthName: string;
+  paymentMethods?: { id: string; name: string }[];
   onTogglePaid?: (item: MonthlyDueItem) => Promise<void> | void;
   onEditVariable?: () => void;
   togglingId?: string | null;
@@ -14,11 +15,13 @@ interface MonthlyDueListProps {
 export function MonthlyDueList({
   items,
   monthName,
+  paymentMethods = [],
   onTogglePaid,
   onEditVariable,
   togglingId,
 }: MonthlyDueListProps) {
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'recurring' | 'own' | 'shared' | 'variable'>('all');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('all');
 
   const formatMoney = (val: number) => {
     return new Intl.NumberFormat('es-AR', {
@@ -28,19 +31,42 @@ export function MonthlyDueList({
     }).format(val);
   };
 
+  // Métodos de pago disponibles (de props o de items)
+  const availableMethods = React.useMemo(() => {
+    if (paymentMethods && paymentMethods.length > 0) return paymentMethods;
+    const map = new Map<string, string>();
+    for (const it of items) {
+      if (it.paymentMethodId && it.paymentMethodName) {
+        map.set(it.paymentMethodId, it.paymentMethodName);
+      }
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [paymentMethods, items]);
+
+  // Doble filtro combinado (Estado/Tipo + Método de pago)
   const filteredItems = items.filter((item) => {
-    if (filter === 'pending') return !item.isPaid;
-    if (filter === 'paid') return item.isPaid;
-    if (filter === 'recurring') return item.type === 'recurring';
-    if (filter === 'own') return item.type === 'installment_own';
-    if (filter === 'shared') return item.type === 'installment_shared';
-    if (filter === 'variable') return item.type === 'variable';
+    // 1. Filtro de estado o tipo
+    if (filter === 'pending' && item.isPaid) return false;
+    if (filter === 'paid' && !item.isPaid) return false;
+    if (filter === 'recurring' && item.type !== 'recurring') return false;
+    if (filter === 'own' && item.type !== 'installment_own' && item.type !== 'installment_shared') return false;
+    if (filter === 'variable' && item.type !== 'variable') return false;
+
+    // 2. Filtro de tarjeta / método de pago
+    if (selectedPaymentMethod !== 'all') {
+      if (selectedPaymentMethod === 'none') {
+        if (item.paymentMethodId) return false;
+      } else {
+        if (item.paymentMethodId !== selectedPaymentMethod) return false;
+      }
+    }
+
     return true;
   });
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
         <div>
           <h3 className="text-base font-bold text-white flex items-center gap-2">
             <span>📅</span>
@@ -51,76 +77,101 @@ export function MonthlyDueList({
           </p>
         </div>
 
-        {/* FILTROS */}
-        <div className="flex items-center gap-1.5 overflow-x-auto bg-slate-950 p-1.5 rounded-xl border border-slate-800/80">
-          <button
-            type="button"
-            onClick={() => setFilter('all')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              filter === 'all'
-                ? 'bg-slate-800 text-white'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Todos ({items.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('pending')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              filter === 'pending'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Pendientes
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('paid')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              filter === 'paid'
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Pagados
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('recurring')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              filter === 'recurring'
-                ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Fijos
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('own')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              filter === 'own'
-                ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Cuotas
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('variable')}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              filter === 'variable'
-                ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Variables
-          </button>
+        {/* CONTENEDOR DE DOBLE FILTRO */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {/* Selector de Tarjeta / Método de Pago */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="due-method-filter" className="text-xs text-slate-400 whitespace-nowrap font-medium">
+              💳 Tarjeta:
+            </label>
+            <select
+              id="due-method-filter"
+              value={selectedPaymentMethod}
+              onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 max-w-[180px] truncate"
+            >
+              <option value="all">Todas las tarjetas</option>
+              {availableMethods.map((pm) => (
+                <option key={pm.id} value={pm.id}>
+                  {pm.name}
+                </option>
+              ))}
+              <option value="none">Sin tarjeta / Efectivo</option>
+            </select>
+          </div>
+
+          {/* Filtros de Tipo / Estado */}
+          <div className="flex items-center gap-1.5 overflow-x-auto bg-slate-950 p-1.5 rounded-xl border border-slate-800/80">
+            <button
+              type="button"
+              onClick={() => setFilter('all')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                filter === 'all'
+                  ? 'bg-slate-800 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Todos ({filteredItems.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('pending')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                filter === 'pending'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Pendientes
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('paid')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                filter === 'paid'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Pagados
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('recurring')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                filter === 'recurring'
+                  ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Fijos
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('own')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                filter === 'own'
+                  ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Cuotas
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('variable')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                filter === 'variable'
+                  ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Variables
+            </button>
+          </div>
         </div>
       </div>
+
 
       {filteredItems.length === 0 ? (
         <div className="text-center py-12 text-slate-500 text-xs">

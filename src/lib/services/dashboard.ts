@@ -13,6 +13,8 @@ export interface MonthlyDueItem {
   isPaid: boolean;
   details?: string;
   beneficiaryName?: string | null;
+  paymentMethodId?: string | null;
+  paymentMethodName?: string | null;
 }
 
 export interface MonthlyConsolidatedSummary {
@@ -89,10 +91,12 @@ export function calculateMonthlyConsolidated(
 
     totalRecurring += amount;
 
-    const methodDetail =
+    const pmName =
       'payment_method' in exp && exp.payment_method?.name
-        ? ` • 💳 ${exp.payment_method.name}`
-        : '';
+        ? exp.payment_method.name
+        : null;
+
+    const methodDetail = pmName ? ` • 💳 ${pmName}` : '';
 
     // Si está registrado en el mapa mensual de pagos, usar ese valor; sino, fallback si tiene actual_amount
     const isPaid =
@@ -111,6 +115,8 @@ export function calculateMonthlyConsolidated(
       isPaid,
       details: `${exp.category || 'Gasto Fijo Mensual'}${methodDetail}`,
       beneficiaryName: null,
+      paymentMethodId: exp.payment_method_id || null,
+      paymentMethodName: pmName,
     });
   }
 
@@ -123,6 +129,7 @@ export function calculateMonthlyConsolidated(
       if (instYear === year && instMonth === month) {
         const amount = Number(inst.amount);
         const isShared = Boolean(tx.beneficiary_person_id);
+        const txPmName = tx.payment_method?.name || null;
 
         if (isShared) {
           totalSharedToCollect += amount;
@@ -135,8 +142,10 @@ export function calculateMonthlyConsolidated(
             day: instDay,
             fullDate: inst.due_date,
             isPaid: Boolean(inst.is_paid),
-            details: tx.payment_method?.name || 'Tarjeta / Crédito',
+            details: txPmName || 'Tarjeta / Crédito',
             beneficiaryName: tx.beneficiary?.name || 'Tercero',
+            paymentMethodId: tx.payment_method_id || null,
+            paymentMethodName: txPmName,
           });
         } else {
           totalInstallmentsOwn += amount;
@@ -149,8 +158,10 @@ export function calculateMonthlyConsolidated(
             day: instDay,
             fullDate: inst.due_date,
             isPaid: Boolean(inst.is_paid),
-            details: tx.payment_method?.name || 'Tarjeta Propia',
+            details: txPmName || 'Tarjeta Propia',
             beneficiaryName: null,
+            paymentMethodId: tx.payment_method_id || null,
+            paymentMethodName: txPmName,
           });
         }
       }
@@ -177,8 +188,11 @@ export function calculateMonthlyConsolidated(
       isPaid: Boolean(variableExpense.is_paid),
       details,
       beneficiaryName: null,
+      paymentMethodId: null,
+      paymentMethodName: null,
     });
   }
+
 
   // 4. Ordenar cronológicamente por día del mes
   items.sort((a, b) => a.day - b.day);
