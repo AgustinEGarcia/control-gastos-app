@@ -4,6 +4,7 @@ import {
   calculateDebtorsGlobalSummary,
   validatePaymentReceivedInput,
   getPublicDebtorStatement,
+  calculateDebtorMonthlyInstallments,
   type DebtorAccount,
 } from './debtors';
 
@@ -210,5 +211,87 @@ describe('Servicio de Deudores y Estado de Cuenta (Spec 006)', () => {
       expect(res).toBeNull();
     });
   });
+
+  describe('Cronograma Mensual de Cuotas para Deudores (Spec 018)', () => {
+    const mockTransactions = [
+      {
+        id: 'tx-1',
+        description: 'Notebook Asus Ideapad',
+        installments_count: 8,
+        payment_method: { name: 'Visa - Macro' },
+        installments: [
+          { id: 'i-1', installment_number: 1, amount: 163686.48, due_date: '2026-10-10', is_paid: false },
+          { id: 'i-2', installment_number: 2, amount: 163686.48, due_date: '2026-11-10', is_paid: false },
+          { id: 'i-3', installment_number: 3, amount: 163686.48, due_date: '2026-12-10', is_paid: false },
+        ],
+      },
+      {
+        id: 'tx-2',
+        description: 'Zapatillas Nike',
+        installments_count: 2,
+        payment_method: { name: 'Visa - Macro' },
+        installments: [
+          { id: 'i-4', installment_number: 1, amount: 27083.16, due_date: '2026-10-10', is_paid: false },
+          { id: 'i-5', installment_number: 2, amount: 27083.16, due_date: '2026-11-10', is_paid: false },
+        ],
+      },
+      {
+        id: 'tx-3',
+        description: 'Botines F50',
+        installments_count: 1,
+        payment_method: { name: 'Visa - Macro' },
+        installments: [
+          { id: 'i-6', installment_number: 1, amount: 14833.00, due_date: '2026-10-10', is_paid: false },
+        ],
+      },
+    ];
+
+    it('debe filtrar y sumar con precisión las cuotas del mes seleccionado (Octubre 2026)', () => {
+      const result = calculateDebtorMonthlyInstallments(mockTransactions, 2026, 10);
+
+      expect(result.year).toBe(2026);
+      expect(result.month).toBe(10);
+      expect(result.items.length).toBe(3);
+
+      // Suma esperada: 163686.48 + 27083.16 + 14833.00 = 205602.64
+      expect(result.totalAmount).toBe(205602.64);
+
+      const notebook = result.items.find((i) => i.description === 'Notebook Asus Ideapad');
+      expect(notebook).toBeDefined();
+      expect(notebook?.installmentNumber).toBe(1);
+      expect(notebook?.totalInstallments).toBe(8);
+      expect(notebook?.amount).toBe(163686.48);
+      expect(notebook?.paymentMethodName).toBe('Visa - Macro');
+
+      const botines = result.items.find((i) => i.description === 'Botines F50');
+      expect(botines).toBeDefined();
+      expect(botines?.installmentNumber).toBe(1);
+      expect(botines?.totalInstallments).toBe(1);
+      expect(botines?.amount).toBe(14833.00);
+    });
+
+    it('debe reflejar la reducción de cuotas para el mes siguiente (Noviembre 2026)', () => {
+      const result = calculateDebtorMonthlyInstallments(mockTransactions, 2026, 11);
+
+      expect(result.year).toBe(2026);
+      expect(result.month).toBe(11);
+      expect(result.items.length).toBe(2);
+
+      // Botines ya no está en noviembre. Solo Notebook (cuota 2) y Zapatillas (cuota 2)
+      // 163686.48 + 27083.16 = 190769.64
+      expect(result.totalAmount).toBe(190769.64);
+
+      const notebook = result.items.find((i) => i.description === 'Notebook Asus Ideapad');
+      expect(notebook?.installmentNumber).toBe(2);
+    });
+
+    it('debe devolver items vacíos y total 0 cuando no hay cuotas en el mes (Enero 2028)', () => {
+      const result = calculateDebtorMonthlyInstallments(mockTransactions, 2028, 1);
+
+      expect(result.items.length).toBe(0);
+      expect(result.totalAmount).toBe(0);
+    });
+  });
 });
+
 

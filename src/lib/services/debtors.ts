@@ -42,6 +42,81 @@ export interface DebtorsGlobalSummary {
   totalLoansPending: number;
 }
 
+export interface DebtorMonthlyInstallmentItem {
+  transactionId: string;
+  description: string;
+  installmentId: string;
+  installmentNumber: number;
+  totalInstallments: number;
+  amount: number;
+  dueDate: string;
+  paymentMethodName: string | null;
+  isPaid: boolean;
+}
+
+export interface DebtorMonthlyCalculation {
+  year: number;
+  month: number;
+  totalAmount: number;
+  items: DebtorMonthlyInstallmentItem[];
+}
+
+export function calculateDebtorMonthlyInstallments(
+  transactions: TransactionWithDetails[] | any[],
+  year: number,
+  month: number
+): DebtorMonthlyCalculation {
+  const items: DebtorMonthlyInstallmentItem[] = [];
+
+  for (const tx of transactions || []) {
+    const installments = tx.installments || [];
+    const totalInstCount = tx.installments_count || installments.length || 1;
+    const pmName = tx.payment_method?.name || null;
+
+    for (const inst of installments) {
+      if (!inst.due_date) continue;
+
+      const parts = inst.due_date.split('-');
+      if (parts.length < 2) continue;
+
+      const instYear = parseInt(parts[0], 10);
+      const instMonth = parseInt(parts[1], 10);
+
+      if (instYear === year && instMonth === month) {
+        items.push({
+          transactionId: tx.id,
+          description: tx.description,
+          installmentId: inst.id,
+          installmentNumber: inst.installment_number,
+          totalInstallments: totalInstCount,
+          amount: Number(inst.amount) || 0,
+          dueDate: inst.due_date,
+          paymentMethodName: pmName,
+          isPaid: !!inst.is_paid,
+        });
+      }
+    }
+  }
+
+  items.sort((a, b) => {
+    if (a.dueDate !== b.dueDate) {
+      return a.dueDate.localeCompare(b.dueDate);
+    }
+    return a.description.localeCompare(b.description);
+  });
+
+  const totalAmount = Number(
+    items.reduce((sum, item) => sum + item.amount, 0).toFixed(2)
+  );
+
+  return {
+    year,
+    month,
+    totalAmount,
+    items,
+  };
+}
+
 export function calculateDebtorBalance(
   transactions: { total_amount: number }[],
   payments: { amount: number }[],

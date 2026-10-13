@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, useMemo, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import {
   type DebtorAccount,
   getPublicDebtorStatement,
+  calculateDebtorMonthlyInstallments,
 } from '@/lib/services/debtors';
 
 interface PageProps {
@@ -98,6 +99,49 @@ export default function EstadoCuentaPage({ params }: PageProps) {
     );
   }
 
+  const currentDate = new Date();
+  const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth() + 1);
+
+  const isCurrentMonthSelected =
+    selectedYear === currentDate.getFullYear() && selectedMonth === currentDate.getMonth() + 1;
+
+  const handlePrevMonth = () => {
+    if (selectedMonth === 1) {
+      setSelectedYear((prev) => prev - 1);
+      setSelectedMonth(12);
+    } else {
+      setSelectedMonth((prev) => prev - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 12) {
+      setSelectedYear((prev) => prev + 1);
+      setSelectedMonth(1);
+    } else {
+      setSelectedMonth((prev) => prev + 1);
+    }
+  };
+
+  const handleResetCurrentMonth = () => {
+    const now = new Date();
+    setSelectedYear(now.getFullYear());
+    setSelectedMonth(now.getMonth() + 1);
+  };
+
+  const monthName = new Date(selectedYear, selectedMonth - 1, 1).toLocaleDateString('es-AR', {
+    month: 'long',
+  });
+  const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+  const monthlyData = useMemo(() => {
+    if (!statement?.transactions) {
+      return { year: selectedYear, month: selectedMonth, totalAmount: 0, items: [] };
+    }
+    return calculateDebtorMonthlyInstallments(statement.transactions, selectedYear, selectedMonth);
+  }, [statement?.transactions, selectedYear, selectedMonth]);
+
   const isPaidOff = statement.remaining_balance <= 0;
   const percentagePaid =
     statement.total_debt > 0
@@ -123,7 +167,107 @@ export default function EstadoCuentaPage({ params }: PageProps) {
           </p>
         </div>
 
-        {/* TARJETA PRINCIPAL DE SALDO */}
+        {/* NAVEGADOR DE MESES Y CRONOGRAMA */}
+        <div className="bg-slate-900/95 border border-indigo-500/30 rounded-2xl p-5 sm:p-6 shadow-2xl backdrop-blur-md space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 border border-slate-700/60 shadow-sm"
+              title="Mes anterior"
+            >
+              <span>◀</span>
+              <span className="hidden sm:inline">Anterior</span>
+            </button>
+
+            <div className="text-center">
+              <span className="text-[11px] font-semibold text-indigo-400 uppercase tracking-wider block">
+                Cronograma de Cobro
+              </span>
+              <h2 className="text-lg sm:text-xl font-extrabold text-white">
+                {capitalizedMonth} {selectedYear}
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 border border-slate-700/60 shadow-sm"
+              title="Mes siguiente"
+            >
+              <span className="hidden sm:inline">Siguiente</span>
+              <span>▶</span>
+            </button>
+          </div>
+
+          {!isCurrentMonthSelected && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleResetCurrentMonth}
+                className="text-[11px] text-indigo-400 hover:text-indigo-300 underline font-medium transition-colors"
+              >
+                Volver al mes actual
+              </button>
+            </div>
+          )}
+
+          {/* TARJETA TOTAL DEL MES */}
+          <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5 text-center relative overflow-hidden">
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block mb-1">
+              Total a pagar en {capitalizedMonth} {selectedYear}
+            </span>
+            <div className="text-3xl sm:text-4xl font-black text-amber-400 mb-1 tracking-tight">
+              {formatMoney(monthlyData.totalAmount)}
+            </div>
+            <p className="text-xs text-slate-400">
+              {monthlyData.items.length === 0
+                ? 'Sin cuotas asignadas en este período'
+                : `${monthlyData.items.length} cuota${monthlyData.items.length !== 1 ? 's' : ''} a abonar en este mes`}
+            </p>
+          </div>
+
+          {/* LISTA DE CUOTAS DEL MES */}
+          {monthlyData.items.length > 0 ? (
+            <div className="space-y-2.5 pt-1">
+              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider px-1">
+                Cuotas de {capitalizedMonth}:
+              </h3>
+              {monthlyData.items.map((item) => (
+                <div
+                  key={item.installmentId}
+                  className="p-3 bg-slate-950/90 rounded-xl border border-slate-800/80 flex items-center justify-between text-xs hover:border-slate-700 transition-colors"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold text-slate-100">{item.description}</h4>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                        Cuota {item.installmentNumber}/{item.totalInstallments}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      {item.paymentMethodName ? `Tarjeta: ${item.paymentMethodName} • ` : ''}
+                      Vence: {item.dueDate}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-bold text-amber-400 text-sm block">
+                      {formatMoney(item.amount)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-6 text-center text-xs text-slate-500 bg-slate-950/40 rounded-xl border border-dashed border-slate-800">
+              <p className="text-base mb-1">🏖️</p>
+              <p>No tienes cuotas registradas a pagar en {capitalizedMonth} de {selectedYear}.</p>
+              <p className="text-[11px] text-slate-600 mt-1">Usa los botones de Anterior / Siguiente para explorar otros meses.</p>
+            </div>
+          )}
+        </div>
+
+        {/* TARJETA PRINCIPAL DE SALDO HISTÓRICO GLOBAL */}
         <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md relative overflow-hidden text-center">
           <div className="absolute top-0 right-0 w-36 h-36 bg-indigo-500/10 rounded-full blur-3xl -mr-8 -mt-8 pointer-events-none" />
 
@@ -131,15 +275,15 @@ export default function EstadoCuentaPage({ params }: PageProps) {
             className={`inline-block text-xs font-semibold px-3 py-1 rounded-full mb-3 ${
               isPaidOff
                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
             }`}
           >
-            {isPaidOff ? '✓ Deuda Totalmente Saldada' : 'Saldo Pendiente por Abonar'}
+            {isPaidOff ? '✓ Deuda Totalmente Saldada' : 'Saldo Global Pendiente por Abonar'}
           </span>
 
           <div
             className={`text-4xl sm:text-5xl font-black tracking-tight mb-3 ${
-              isPaidOff ? 'text-emerald-400' : 'text-amber-400'
+              isPaidOff ? 'text-emerald-400' : 'text-slate-100'
             }`}
           >
             {formatMoney(statement.remaining_balance)}
