@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   calculateDebtorBalance,
   calculateDebtorsGlobalSummary,
   validatePaymentReceivedInput,
+  getPublicDebtorStatement,
   type DebtorAccount,
 } from './debtors';
 
@@ -154,4 +155,60 @@ describe('Servicio de Deudores y Estado de Cuenta (Spec 006)', () => {
       expect(balance.status).toBe('pending');
     });
   });
+
+  describe('Portal Público de Estado de Cuenta (getPublicDebtorStatement)', () => {
+    it('debe obtener y procesar el estado de cuenta a través de la función RPC segura get_public_debtor_statement', async () => {
+      const mockRpcResponse = {
+        person: { id: 'p-123', name: 'Carlos Gómez' },
+        transactions: [
+          { id: 't-1', total_amount: 50000, beneficiary_person_id: 'p-123' },
+        ],
+        direct_loans: [
+          { id: 'l-1', initial_amount: 20000, total_repaid: 0, remaining_balance: 20000 },
+        ],
+        payments_received: [
+          { id: 'pr-1', amount: 30000, payment_date: '2026-03-01' },
+        ],
+      };
+
+      const mockSupabase: any = {
+        rpc: vi.fn().mockResolvedValue({
+          data: mockRpcResponse,
+          error: null,
+        }),
+      };
+
+      const res = await getPublicDebtorStatement(mockSupabase, 'p-123');
+
+      expect(mockSupabase.rpc).toHaveBeenCalledWith('get_public_debtor_statement', {
+        p_person_id: 'p-123',
+      });
+      expect(res).not.toBeNull();
+      expect(res?.person.name).toBe('Carlos Gómez');
+      expect(res?.card_debt).toBe(20000); // 50000 original - 30000 pagado = 20000 remanente
+      expect(res?.direct_loans_debt).toBe(20000);
+      expect(res?.total_debt).toBe(70000);
+      expect(res?.total_paid).toBe(30000);
+      expect(res?.remaining_balance).toBe(40000);
+      expect(res?.status).toBe('pending');
+    });
+
+    it('debe retornar null cuando la persona no existe ni en RPC ni en fallback', async () => {
+      const mockSupabase: any = {
+        rpc: vi.fn().mockResolvedValue({
+          data: null,
+          error: null,
+        }),
+        from: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({ data: null, error: { message: 'Not found' } }),
+        }),
+      };
+
+      const res = await getPublicDebtorStatement(mockSupabase, 'p-inexistente');
+      expect(res).toBeNull();
+    });
+  });
 });
+

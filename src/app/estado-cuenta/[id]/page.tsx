@@ -26,7 +26,23 @@ export default function EstadoCuentaPage({ params }: PageProps) {
       try {
         setLoading(true);
         setErrorMsg(null);
-        const data = await getPublicDebtorStatement(supabase, personId);
+        let data = await getPublicDebtorStatement(supabase, personId);
+
+        // Fallback vía endpoint API del servidor en caso de restricciones de red en cliente
+        if (!data) {
+          try {
+            const apiRes = await fetch(`/api/debtors/statement/${personId}`);
+            if (apiRes.ok) {
+              const json = await apiRes.json();
+              if (json && json.statement) {
+                data = json.statement;
+              }
+            }
+          } catch {
+            // Ignorar y procesar resultado final
+          }
+        }
+
         if (!data) {
           setErrorMsg('No se encontró el estado de cuenta solicitado o el enlace no es válido.');
         } else {

@@ -287,6 +287,39 @@ export async function getPublicDebtorStatement(
   supabase: SupabaseClient<Database>,
   personId: string
 ): Promise<DebtorAccount | null> {
+  // 1. Intentar obtener datos mediante la función RPC segura get_public_debtor_statement (soporta acceso anónimo público)
+  try {
+    const { data: rpcData, error: rpcError } = await (supabase.rpc as any)(
+      'get_public_debtor_statement',
+      { p_person_id: personId }
+    );
+
+    if (!rpcError && rpcData && rpcData.person) {
+      const person = rpcData.person;
+      const transactions = rpcData.transactions || [];
+      const directLoans = rpcData.direct_loans || [];
+      const paymentsReceived = rpcData.payments_received || [];
+
+      const balance = calculateDebtorBalance(transactions, paymentsReceived, directLoans);
+
+      return {
+        person,
+        total_debt: balance.totalDebt,
+        total_paid: balance.totalPaid,
+        remaining_balance: balance.remainingBalance,
+        card_debt: balance.cardDebt,
+        direct_loans_debt: balance.directLoansDebt,
+        status: balance.status,
+        transactions,
+        payments_received: paymentsReceived,
+        direct_loans: directLoans,
+      };
+    }
+  } catch {
+    // Si la RPC no está configurada o falla temporalmente, pasar al fallback directo
+  }
+
+  // 2. Fallback directo (para sesiones de usuario autenticado o mocks de testing)
   const { data: person, error: pError } = await supabase
     .from('people')
     .select('*')

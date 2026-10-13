@@ -5,7 +5,8 @@ Memoria del proyecto entre sesiones. Máximo ~50 líneas: resumir o eliminar lo 
 - Specs 001 a 017 completadas y probadas al 100%.
 - Base de datos Supabase: Esquema incluye `monthly_expense_payments` y `variable_monthly_expenses` (con fallback local resiliente Zero Downtime).
 - Vistas activas: Dashboard (`/dashboard`), Landing (`/`), Login (`/login`), Actualizar Clave (`/actualizar-contrasena`), Métodos de Pago (`/metodos-pago`), Gastos Fijos (`/gastos-recurrentes`), Tarjetas/Cuotas (`/transacciones`), Préstamos (`/prestamos`), Deudores (`/deudores`), Personas (`/personas`), Portal Público (`/estado-cuenta/[id]`) y Alertas (`/alertas`).
-- Suite de pruebas: 107 pruebas unitarias con Vitest y 28 pruebas E2E con Playwright 100% en verde.
+- Suite de pruebas: 109 pruebas unitarias con Vitest y 28 pruebas E2E con Playwright 100% en verde.
+- Portal Público de Deudores (`/estado-cuenta/[id]`): Soporte de acceso anónimo seguro mediante RPC `get_public_debtor_statement` (SECURITY DEFINER) y endpoint API `/api/debtors/statement/[id]` con fallback resiliente.
 - Spec 017: Gestión de Resumen Real de Tarjetas con acción rápida para saltear cuotas (+1 mes), acción explícita de cobro doble de cuotas (trae la siguiente cuota al mes en curso para duplicar el monto en el resumen), y registro de devoluciones/créditos a favor que restan del total a pagar de la tarjeta y del mes.
 
 ## Protocolo Obligatorio ante Nuevos Requerimientos (Interactivo SDD)
