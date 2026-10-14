@@ -62,43 +62,6 @@ export default function EstadoCuentaPage({ params }: PageProps) {
     }
   }, [personId, supabase]);
 
-  const formatMoney = (val: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 2,
-    }).format(val);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
-        <div className="text-center space-y-3">
-          <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-slate-400">Cargando estado de cuenta en vivo...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (errorMsg || !statement) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center shadow-xl">
-          <div className="text-4xl mb-3">🔍</div>
-          <h2 className="text-lg font-bold text-white mb-2">Estado de cuenta no disponible</h2>
-          <p className="text-xs text-slate-400 mb-6">{errorMsg}</p>
-          <a
-            href="/"
-            className="inline-block px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-xl text-white transition-colors"
-          >
-            Ir al Inicio
-          </a>
-        </div>
-      </div>
-    );
-  }
-
   const currentDate = new Date();
   const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth() + 1);
@@ -142,10 +105,47 @@ export default function EstadoCuentaPage({ params }: PageProps) {
     return calculateDebtorMonthlyInstallments(statement.transactions, selectedYear, selectedMonth);
   }, [statement?.transactions, selectedYear, selectedMonth]);
 
-  const isPaidOff = statement.remaining_balance <= 0;
+  const formatMoney = (val: number) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      maximumFractionDigits: 2,
+    }).format(val);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-slate-400">Cargando estado de cuenta en vivo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (errorMsg || !statement) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center shadow-xl">
+          <div className="text-4xl mb-3">🔍</div>
+          <h2 className="text-lg font-bold text-white mb-2">Estado de cuenta no disponible</h2>
+          <p className="text-xs text-slate-400 mb-6">{errorMsg}</p>
+          <a
+            href="/"
+            className="inline-block px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-xl text-white transition-colors"
+          >
+            Ir al Inicio
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  const isPaidOff = (statement.remaining_balance ?? 0) <= 0;
   const percentagePaid =
-    statement.total_debt > 0
-      ? Math.min(100, Math.round((statement.total_paid / statement.total_debt) * 100))
+    (statement.total_debt ?? 0) > 0
+      ? Math.min(100, Math.round(((statement.total_paid ?? 0) / (statement.total_debt ?? 1)) * 100))
       : 100;
 
   const hasDirectLoans = (statement.direct_loans || []).length > 0;
