@@ -31,12 +31,9 @@ Memoria del proyecto entre sesiones. Máximo ~50 líneas: resumir o eliminar lo 
   - Navbar adaptado con botón hamburguesa minimalista técnico y drawer desplegable táctil accesible para todas las secciones.
   - Pruebas: 112 unitarias y 28 E2E pasando 100% verdes.
 
-- Spec 021 (Módulo de Stock y Compras de Dólares USD): 100% completado.
-  - Formulario de compras con fecha (default hoy, editable), cantidad USD, cotización ARS, cálculo dinámico de total ARS y notas.
-  - Panel de métricas con stock USD, cotización promedio ponderada y total ARS invertido.
-  - Tabla de historial con acciones de editar y eliminar.
-  - Pruebas: 118 unitarias y 28 E2E pasando 100% verdes.
+- Spec 021 (Stock y Compras de Dólares USD): Formulario con fecha, cantidad USD, cotización ARS, promedio ponderado, métricas de stock y tabla historial en `/dolares`.
+- Spec 022 (Apartado de Suscripciones y Estimación Mensual): Gestión de servicios periódicos en `/suscripciones`, cobro, método, categoría, toggle activo/pausado y métricas totales mensuales ARS/USD.
+  - Pruebas: 124 unitarias (Vitest) y 28 E2E (Playwright) 100% en verde. Compilación Turbopack exitosa.
 
 ## Próximos pasos
-- Fase 3: Spec 022 - Apartado de Suscripciones y estimación mensual total.
-
+- Monitorear despliegue en Vercel y feedback del usuario sobre las nuevas funcionalidades de Dólares y Suscripciones.
