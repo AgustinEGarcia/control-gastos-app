@@ -11,6 +11,7 @@ export function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const supabase = createClient();
 
@@ -33,8 +34,14 @@ export function Navbar() {
     };
   }, [supabase]);
 
+  // Cerrar menú móvil al navegar a otra ruta
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    setMobileMenuOpen(false);
     router.push('/login');
     router.refresh();
   };
@@ -42,6 +49,17 @@ export function Navbar() {
   if (pathname === '/login') {
     return null;
   }
+
+  const navLinks = [
+    { href: '/dashboard', label: 'Dashboard', active: pathname === '/dashboard' || pathname === '/' },
+    { href: '/metodos-pago', label: 'Métodos de Pago', active: pathname === '/metodos-pago' },
+    { href: '/gastos-recurrentes', label: 'Gastos Fijos', active: pathname === '/gastos-recurrentes' },
+    { href: '/transacciones', label: 'Compras y Cuotas', active: pathname === '/transacciones' },
+    { href: '/prestamos', label: 'Préstamos', active: pathname === '/prestamos' },
+    { href: '/deudores', label: 'Deudores', active: pathname === '/deudores' },
+    { href: '/personas', label: 'Personas', active: pathname === '/personas' },
+    { href: '/alertas', label: 'Alertas', active: pathname === '/alertas' },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
@@ -54,94 +72,29 @@ export function Navbar() {
             <span className="text-sm font-semibold tracking-tight">Finanzas 360°</span>
           </a>
 
+          {/* Navegación Desktop */}
           <nav className="hidden md:flex items-center gap-1 text-xs">
-            <a
-              href="/dashboard"
-              className={`px-2.5 py-1.5 rounded-md transition-colors border ${
-                pathname === '/dashboard' || pathname === '/'
-                  ? 'bg-zinc-900 text-white border-zinc-700/60 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border-transparent'
-              }`}
-            >
-              Dashboard
-            </a>
-            <a
-              href="/metodos-pago"
-              className={`px-2.5 py-1.5 rounded-md transition-colors border ${
-                pathname === '/metodos-pago'
-                  ? 'bg-zinc-900 text-white border-zinc-700/60 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border-transparent'
-              }`}
-            >
-              Métodos de Pago
-            </a>
-            <a
-              href="/gastos-recurrentes"
-              className={`px-2.5 py-1.5 rounded-md transition-colors border ${
-                pathname === '/gastos-recurrentes'
-                  ? 'bg-zinc-900 text-white border-zinc-700/60 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border-transparent'
-              }`}
-            >
-              Gastos Fijos
-            </a>
-            <a
-              href="/transacciones"
-              className={`px-2.5 py-1.5 rounded-md transition-colors border ${
-                pathname === '/transacciones'
-                  ? 'bg-zinc-900 text-white border-zinc-700/60 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border-transparent'
-              }`}
-            >
-              Compras y Cuotas
-            </a>
-            <a
-              href="/prestamos"
-              className={`px-2.5 py-1.5 rounded-md transition-colors border ${
-                pathname === '/prestamos'
-                  ? 'bg-zinc-900 text-white border-zinc-700/60 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border-transparent'
-              }`}
-            >
-              Préstamos
-            </a>
-            <a
-              href="/deudores"
-              className={`px-2.5 py-1.5 rounded-md transition-colors border ${
-                pathname === '/deudores'
-                  ? 'bg-zinc-900 text-white border-zinc-700/60 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border-transparent'
-              }`}
-            >
-              Deudores
-            </a>
-            <a
-              href="/personas"
-              className={`px-2.5 py-1.5 rounded-md transition-colors border ${
-                pathname === '/personas'
-                  ? 'bg-zinc-900 text-white border-zinc-700/60 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border-transparent'
-              }`}
-            >
-              Personas
-            </a>
-            <a
-              href="/alertas"
-              className={`px-2.5 py-1.5 rounded-md transition-colors border ${
-                pathname === '/alertas'
-                  ? 'bg-zinc-900 text-white border-zinc-700/60 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border-transparent'
-              }`}
-            >
-              Alertas
-            </a>
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className={`px-2.5 py-1.5 rounded-md transition-colors border ${
+                  link.active
+                    ? 'bg-zinc-900 text-white border-zinc-700/60 font-medium'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border-transparent'
+                }`}
+              >
+                {link.label}
+              </a>
+            ))}
           </nav>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Autenticación Desktop */}
           {!loading && user ? (
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-mono text-zinc-400 hidden sm:inline-block max-w-[180px] truncate">
+            <div className="hidden sm:flex items-center gap-3">
+              <span className="text-xs font-mono text-zinc-400 max-w-[180px] truncate">
                 {user.email}
               </span>
               <button
@@ -159,8 +112,56 @@ export function Navbar() {
               Iniciar Sesión
             </a>
           ) : null}
+
+          {/* Botón Hamburguesa Móvil */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Abrir menú de navegación"
+            className="md:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 border border-zinc-800/80 transition-colors flex items-center justify-center text-sm font-mono"
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
         </div>
       </div>
+
+      {/* Menú Desplegable Móvil */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-zinc-800/80 bg-zinc-950/95 backdrop-blur-xl px-4 py-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <nav className="flex flex-col space-y-1">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-between ${
+                  link.active
+                    ? 'bg-zinc-900 text-white border border-zinc-700/60 font-semibold'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900/40'
+                }`}
+              >
+                <span>{link.label}</span>
+                {link.active && <span className="text-emerald-400 font-mono text-[10px]">●</span>}
+              </a>
+            ))}
+          </nav>
+
+          {!loading && user && (
+            <div className="pt-3 border-t border-zinc-800/80 flex flex-col gap-2">
+              <span className="text-[11px] font-mono text-zinc-400 truncate">
+                Conectado como: <strong className="text-zinc-200">{user.email}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full text-center px-3 py-2 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 hover:text-white transition-colors"
+              >
+                Cerrar Sesión
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 }

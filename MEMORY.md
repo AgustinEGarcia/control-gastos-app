@@ -27,6 +27,11 @@ Memoria del proyecto entre sesiones. Máximo ~50 líneas: resumir o eliminar lo 
   - Ruta de laboratorio temporal `/estilos-demo` desmantelada.
   - Pruebas: 112 pruebas unitarias Vitest y 28 pruebas Playwright E2E pasando 100% en verde sin regresiones.
 
+- Spec 020 (Navegación Móvil Responsive): 100% completado.
+  - Navbar adaptado con botón hamburguesa minimalista técnico y drawer desplegable táctil accesible para todas las secciones.
+  - Pruebas: 112 unitarias y 28 E2E pasando 100% verdes.
+
 ## Próximos pasos
-- Recibir del usuario los requerimientos e ideas de las nuevas funcionalidades para iniciar su ciclo SDD.
+- Fase 2: Spec 021 - Módulo de Stock y Compras de Dólares (USD): Formulario con fecha (default hoy), cotización ARS, cantidad USD, cálculo de total ARS, tabla historial y métricas clave. Vista previa en local para validación.
+- Fase 3: Apartado de Suscripciones y estimación mensual total.
 
