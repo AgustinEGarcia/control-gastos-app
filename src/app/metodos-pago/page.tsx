@@ -90,7 +90,6 @@ export default function MetodosPagoPage() {
   const thirdPartyCount = methods.filter((m) => !m.is_own).length;
 
   return (
-  return (
     <div className="min-h-screen bg-black text-zinc-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header y Acción Principal */}

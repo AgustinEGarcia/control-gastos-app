@@ -15,7 +15,6 @@ export function DebtorSummaryCards({ summary }: DebtorSummaryCardsProps) {
   };
 
   return (
-  return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       {/* TARJETA TOTAL A COBRAR */}
       <div className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-5 hover:border-zinc-700/80 transition-colors">
