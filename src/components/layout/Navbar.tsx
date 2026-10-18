@@ -52,6 +52,7 @@ export function Navbar() {
 
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard', active: pathname === '/dashboard' || pathname === '/' },
+    { href: '/dolares', label: 'Dólares', active: pathname === '/dolares' },
     { href: '/metodos-pago', label: 'Métodos de Pago', active: pathname === '/metodos-pago' },
     { href: '/gastos-recurrentes', label: 'Gastos Fijos', active: pathname === '/gastos-recurrentes' },
     { href: '/transacciones', label: 'Compras y Cuotas', active: pathname === '/transacciones' },

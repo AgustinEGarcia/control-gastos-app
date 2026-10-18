@@ -31,7 +31,12 @@ Memoria del proyecto entre sesiones. Máximo ~50 líneas: resumir o eliminar lo 
   - Navbar adaptado con botón hamburguesa minimalista técnico y drawer desplegable táctil accesible para todas las secciones.
   - Pruebas: 112 unitarias y 28 E2E pasando 100% verdes.
 
+- Spec 021 (Módulo de Stock y Compras de Dólares USD): 100% completado.
+  - Formulario de compras con fecha (default hoy, editable), cantidad USD, cotización ARS, cálculo dinámico de total ARS y notas.
+  - Panel de métricas con stock USD, cotización promedio ponderada y total ARS invertido.
+  - Tabla de historial con acciones de editar y eliminar.
+  - Pruebas: 118 unitarias y 28 E2E pasando 100% verdes.
+
 ## Próximos pasos
-- Fase 2: Spec 021 - Módulo de Stock y Compras de Dólares (USD): Formulario con fecha (default hoy), cotización ARS, cantidad USD, cálculo de total ARS, tabla historial y métricas clave. Vista previa en local para validación.
-- Fase 3: Apartado de Suscripciones y estimación mensual total.
+- Fase 3: Spec 022 - Apartado de Suscripciones y estimación mensual total.
 
