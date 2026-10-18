@@ -51,43 +51,43 @@ export function TransactionCard({
   };
 
   return (
-    <div className="rounded-2xl p-5 border bg-zinc-900/80 border-zinc-800 hover:border-zinc-700 transition-all shadow-lg">
+    <div className="rounded-xl p-5 border bg-zinc-950 border-zinc-800/80 hover:border-zinc-700/80 transition-colors">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
             {isRefund ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                <span>🟢</span> Devolución / Reintegro
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono tracking-wide uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                Devolución / Reintegro
               </span>
             ) : (
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase ${
+                className={`px-2 py-0.5 rounded text-[10px] font-mono tracking-wide uppercase border ${
                   isShared
-                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                    : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    ? 'bg-zinc-900 text-amber-400 border-zinc-800'
+                    : 'bg-zinc-900 text-zinc-300 border border-zinc-800'
                 }`}
               >
                 {isShared ? `Prestada a: ${transaction.beneficiary?.name}` : 'Consumo Propio'}
               </span>
             )}
             {transaction.payment_method && (
-              <span className="text-xs text-zinc-400 flex items-center gap-1">
+              <span className="text-xs text-zinc-400 font-mono flex items-center gap-1">
                 💳 {transaction.payment_method.name}
               </span>
             )}
           </div>
-          <h3 className="font-semibold text-white text-base">
+          <h3 className="font-medium text-zinc-100 text-sm">
             {displayTitle}
           </h3>
-          <span className="text-[11px] text-zinc-500">
+          <span className="text-[11px] font-mono text-zinc-500">
             Comprado el {transaction.purchase_date}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="text-right">
-            <span className={`font-mono text-base font-bold block ${isRefund ? 'text-emerald-400' : 'text-white'}`}>
+            <span className={`font-mono text-base font-bold block ${isRefund ? 'text-emerald-400' : 'text-zinc-100'}`}>
               {isRefund ? `-${formatCurrency(Number(transaction.total_amount))}` : formatCurrency(Number(transaction.total_amount))}
             </span>
             <span className="text-[11px] text-zinc-400 font-mono">
@@ -100,7 +100,7 @@ export function TransactionCard({
             <button
               onClick={() => onEdit(transaction)}
               title="Editar compra"
-              className="text-zinc-500 hover:text-emerald-400 p-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors text-sm"
+              className="text-zinc-500 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-900 transition-colors text-sm"
             >
               ✏️
             </button>
@@ -110,7 +110,7 @@ export function TransactionCard({
             onClick={handleDelete}
             disabled={deleting}
             title="Eliminar compra"
-            className="text-zinc-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors text-sm"
+            className="text-zinc-500 hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors text-sm"
           >
             {deleting ? '...' : '🗑️'}
           </button>
@@ -119,24 +119,22 @@ export function TransactionCard({
 
       {/* Barra de Progreso de Cuotas */}
       <div className="mt-4 pt-3 border-t border-zinc-800/60">
-        <div className="flex items-center justify-between text-xs mb-1.5">
+        <div className="flex items-center justify-between text-xs mb-1.5 font-mono">
           <span className="text-zinc-400">
             {isFullyPaid
-              ? '✅ 100% Pagada'
+              ? '✓ 100% Pagada'
               : `${paidCount} de ${totalInstallments} cuotas pagadas`}
           </span>
-          <span className="font-mono font-semibold text-zinc-300">
+          <span className="font-mono text-zinc-300">
             {progressPercent}%
           </span>
         </div>
-        <div className="w-full h-2 rounded-full bg-zinc-800 overflow-hidden">
+        <div className="w-full h-1 rounded-full bg-zinc-900 overflow-hidden">
           <div
             className={`h-full transition-all duration-300 ${
               isFullyPaid
-                ? 'bg-emerald-400'
-                : isShared
-                ? 'bg-gradient-to-r from-cyan-500 to-teal-400'
-                : 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                ? 'bg-emerald-500'
+                : 'bg-zinc-200'
             }`}
             style={{ width: `${progressPercent}%` }}
           />
@@ -147,7 +145,7 @@ export function TransactionCard({
       <div className="mt-4 flex items-center justify-between pt-2">
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 font-medium transition-colors"
+          className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 font-mono transition-colors"
         >
           <span>{expanded ? 'Ocultar cuotas ▲' : 'Ver detalle de cuotas ▼'}</span>
         </button>
@@ -161,14 +159,14 @@ export function TransactionCard({
 
       {/* Lista Desplegable de Cuotas */}
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-zinc-800/60 space-y-2 animate-in fade-in duration-200">
+        <div className="mt-3 pt-3 border-t border-zinc-800/60 space-y-1.5 animate-in fade-in duration-200">
           {transaction.installments.map((inst) => (
             <div
               key={inst.id}
-              className={`flex items-center justify-between p-2.5 rounded-xl border text-xs transition-colors ${
+              className={`flex items-center justify-between p-2 rounded-lg border text-xs transition-colors ${
                 inst.is_paid
-                  ? 'bg-emerald-500/5 border-emerald-500/20 text-zinc-400'
-                  : 'bg-zinc-800/40 border-zinc-800 text-zinc-200'
+                  ? 'bg-zinc-950 border-zinc-800/40 text-zinc-500'
+                  : 'bg-zinc-900/60 border-zinc-800 text-zinc-200'
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -180,24 +178,24 @@ export function TransactionCard({
                   className="w-4 h-4 rounded accent-emerald-500 cursor-pointer"
                 />
                 <div>
-                  <span className="font-semibold text-white">
+                  <span className="font-mono text-zinc-200">
                     Cuota {inst.installment_number}/{totalInstallments}
                   </span>
-                  <span className="text-zinc-500 ml-2 font-mono">
+                  <span className="text-zinc-500 ml-2 font-mono text-[11px]">
                     Vence {inst.due_date}
                   </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="font-mono font-medium">
+                <span className="font-mono">
                   {formatCurrency(Number(inst.amount))}
                 </span>
                 <span
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${
                     inst.is_paid
-                      ? 'bg-emerald-500/10 text-emerald-400'
-                      : 'bg-amber-500/10 text-amber-400'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                   }`}
                 >
                   {inst.is_paid ? 'Pagada' : 'Pendiente'}

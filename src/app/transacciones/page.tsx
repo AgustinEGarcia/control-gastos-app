@@ -169,19 +169,19 @@ export default function TransaccionesPage() {
       {/* Header y Acción Principal */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            💳 Tarjetas, Cuotas y Compras
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-100">
+            Tarjetas, Cuotas y Compras
           </h1>
-          <p className="text-sm text-zinc-400 mt-1">
+          <p className="text-xs text-zinc-400 mt-1">
             Supervisa tus compras financiadas, cuotas pendientes y dinero a cobrar a terceros.
           </p>
         </div>
 
         <button
           onClick={() => setIsFormOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 font-medium text-xs transition-colors"
         >
-          <span className="text-base leading-none">+</span>
+          <span>+</span>
           <span>Registrar Compra</span>
         </button>
       </div>
@@ -190,40 +190,40 @@ export default function TransaccionesPage() {
       <TransactionSummaryCards summaries={summaries} />
 
       {errorMsg && (
-        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-          ⚠️ {errorMsg}
+        <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-mono">
+          {errorMsg}
         </div>
       )}
 
       {/* Barra de Filtros: Pestañas de tipo y Selector de Tarjeta/Método */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-6 border-b border-zinc-800">
-        <div className="flex items-center gap-2 overflow-x-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-6 border-b border-zinc-800/80">
+        <div className="flex items-center gap-1.5 overflow-x-auto">
           <button
             onClick={() => setActiveTab('all')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
+            className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors whitespace-nowrap ${
               activeTab === 'all'
-                ? 'bg-zinc-800 text-white border border-zinc-700'
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                ? 'bg-zinc-900 text-white font-medium border border-zinc-700'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60'
             }`}
           >
-            Todas las compras ({transactions.length})
+            Todas ({transactions.length})
           </button>
           <button
             onClick={() => setActiveTab('own')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
+            className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors whitespace-nowrap ${
               activeTab === 'own'
-                ? 'bg-zinc-800 text-emerald-400 border border-zinc-700'
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                ? 'bg-zinc-900 text-zinc-100 font-medium border border-zinc-700'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60'
             }`}
           >
-            Consumos Propios ({transactions.filter((t) => !t.beneficiary_person_id).length})
+            Propios ({transactions.filter((t) => !t.beneficiary_person_id).length})
           </button>
           <button
             onClick={() => setActiveTab('shared')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
+            className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors whitespace-nowrap ${
               activeTab === 'shared'
-                ? 'bg-zinc-800 text-cyan-400 border border-zinc-700'
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                ? 'bg-zinc-900 text-amber-400 font-medium border border-zinc-700'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60'
             }`}
           >
             A Cobrar ({transactions.filter((t) => Boolean(t.beneficiary_person_id)).length})
@@ -232,14 +232,14 @@ export default function TransaccionesPage() {
 
         {/* Filtro por Método de Pago */}
         <div className="flex items-center gap-2">
-          <label htmlFor="method-filter" className="text-xs text-zinc-400 whitespace-nowrap">
-            💳 Tarjeta:
+          <label htmlFor="method-filter" className="text-xs text-zinc-400 font-medium whitespace-nowrap">
+            Tarjeta:
           </label>
           <select
             id="method-filter"
             value={selectedMethodId}
             onChange={(e) => setSelectedMethodId(e.target.value)}
-            className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 max-w-[200px] truncate"
+            className="px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 focus:outline-none focus:border-zinc-600 max-w-[200px] truncate"
           >
             <option value="all">Todas las tarjetas</option>
             {paymentMethods.map((pm) => (

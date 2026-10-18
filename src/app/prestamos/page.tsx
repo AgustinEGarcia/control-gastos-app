@@ -133,19 +133,19 @@ export default function PrestamosPage() {
   const borrowedCount = loans.filter((l) => l.loan_type !== 'lent').length;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-black text-zinc-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* HEADER DE LA SECCIÓN */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-zinc-800/80">
           <div>
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🤝</span>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <div className="flex items-center gap-2">
+              <span className="text-zinc-400 font-mono text-sm">/</span>
+              <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
                 Préstamos Personales y Deudas
               </h1>
             </div>
-            <p className="text-sm text-slate-400 mt-1">
-              Control de dinero prestado a terceros (a término abierto) y deudas propias en ARS y USD.
+            <p className="text-xs text-zinc-400 mt-1 font-mono">
+              Control de préstamos a término abierto a terceros y pasivos propios en ARS y USD.
             </p>
           </div>
 
@@ -153,7 +153,7 @@ export default function PrestamosPage() {
             <button
               type="button"
               onClick={() => handleOpenForm('lent')}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-950 bg-emerald-500 hover:bg-emerald-400 shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium text-zinc-950 bg-white hover:bg-zinc-200 transition-colors shadow-sm"
             >
               <span>+</span>
               <span>Prestar Dinero</span>
@@ -161,7 +161,7 @@ export default function PrestamosPage() {
             <button
               type="button"
               onClick={() => handleOpenForm('borrowed')}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium text-zinc-200 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 transition-colors"
             >
               <span>+</span>
               <span>Me Prestaron</span>
@@ -171,11 +171,11 @@ export default function PrestamosPage() {
 
         {/* MENSAJES DE ERROR */}
         {errorMsg && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400 flex items-center justify-between">
+          <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 flex items-center justify-between font-mono">
             <span>{errorMsg}</span>
             <button
               onClick={() => loadData()}
-              className="text-xs font-semibold underline hover:text-white ml-4"
+              className="text-xs font-medium underline hover:text-white ml-4"
             >
               Reintentar
             </button>
@@ -183,14 +183,14 @@ export default function PrestamosPage() {
         )}
 
         {/* SELECTOR PRINCIPAL: PRESTÉ VS ME PRESTARON */}
-        <div className="flex p-1 bg-slate-900 border border-slate-800 rounded-2xl mb-6 max-w-md">
+        <div className="flex p-1 bg-zinc-900/60 border border-zinc-800/80 rounded-lg max-w-md">
           <button
             type="button"
             onClick={() => setTypeTab('all')}
-            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
+            className={`flex-1 py-1.5 text-xs font-mono font-medium rounded-md transition-all ${
               typeTab === 'all'
-                ? 'bg-slate-800 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-zinc-800 text-white shadow-sm'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             Todos ({loans.length})
@@ -198,24 +198,24 @@ export default function PrestamosPage() {
           <button
             type="button"
             onClick={() => setTypeTab('lent')}
-            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-1.5 text-xs font-mono font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${
               typeTab === 'lent'
-                ? 'bg-emerald-500 text-slate-950 shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-zinc-800 text-emerald-400 shadow-sm border border-emerald-500/20'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <span>📤</span> Presté ({lentCount})
+            Presté ({lentCount})
           </button>
           <button
             type="button"
             onClick={() => setTypeTab('borrowed')}
-            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-1.5 text-xs font-mono font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${
               typeTab === 'borrowed'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-zinc-800 text-indigo-300 shadow-sm border border-indigo-500/20'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <span>📥</span> Me prestaron ({borrowedCount})
+            Me prestaron ({borrowedCount})
           </button>
         </div>
 
@@ -223,47 +223,47 @@ export default function PrestamosPage() {
         <LoanSummaryCards summary={summary} />
 
         {/* SUB-PESTAÑAS DE MONEDA */}
-        <div className="flex items-center gap-2 border-b border-slate-800 pb-4 mb-6 overflow-x-auto">
+        <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3 overflow-x-auto">
           <button
             type="button"
             onClick={() => setCurrencyFilter('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-colors ${
               currencyFilter === 'all'
-                ? 'bg-slate-800 text-white border border-slate-700'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                ? 'bg-zinc-800 text-white border border-zinc-700'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900/50'
             }`}
           >
-            Todas las divisas ({loansByType.length})
+            Todas ({loansByType.length})
           </button>
           <button
             type="button"
             onClick={() => setCurrencyFilter('ARS')}
-            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-colors ${
               currencyFilter === 'ARS'
-                ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                ? 'bg-zinc-800 text-blue-400 border border-blue-500/30'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900/50'
             }`}
           >
-            En Pesos ARS ({summary.ARS.activeCount} activos)
+            ARS ({summary.ARS.activeCount} activos)
           </button>
           <button
             type="button"
             onClick={() => setCurrencyFilter('USD')}
-            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-colors ${
               currencyFilter === 'USD'
-                ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900/50'
             }`}
           >
-            En Dólares USD ({summary.USD.activeCount} activos)
+            USD ({summary.USD.activeCount} activos)
           </button>
           <button
             type="button"
             onClick={() => setCurrencyFilter('paid_off')}
-            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-colors ${
               currencyFilter === 'paid_off'
-                ? 'bg-slate-800 text-slate-200 border border-slate-700'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                ? 'bg-zinc-800 text-zinc-300 border border-zinc-700'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900/50'
             }`}
           >
             Saldados ({summary.ARS.paidOffCount + summary.USD.paidOffCount})
@@ -272,21 +272,20 @@ export default function PrestamosPage() {
 
         {/* CONTENIDO PRINCIPAL */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((n) => (
               <div
                 key={n}
-                className="h-64 bg-slate-900/40 rounded-2xl border border-slate-800/80 animate-pulse"
+                className="h-56 bg-zinc-950 rounded-xl border border-zinc-800/80 animate-pulse"
               />
             ))}
           </div>
         ) : filteredLoans.length === 0 ? (
-          <div className="text-center py-16 bg-slate-900/40 rounded-2xl border border-slate-800/60 p-8">
-            <div className="text-4xl mb-3">🤝</div>
-            <h3 className="text-base font-semibold text-white mb-1">
+          <div className="text-center py-16 bg-zinc-950 rounded-xl border border-zinc-800/80 p-8">
+            <h3 className="text-sm font-medium text-white mb-1">
               No hay préstamos para mostrar
             </h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto mb-6">
+            <p className="text-xs text-zinc-400 max-w-sm mx-auto mb-5 font-mono">
               {typeTab === 'lent'
                 ? 'Aún no registraste dinero prestado a terceros.'
                 : typeTab === 'borrowed'
@@ -297,14 +296,14 @@ export default function PrestamosPage() {
               <button
                 type="button"
                 onClick={() => handleOpenForm('lent')}
-                className="px-4 py-2 rounded-xl text-xs font-medium bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors"
+                className="px-3.5 py-2 rounded-lg text-xs font-medium bg-white hover:bg-zinc-200 text-zinc-950 transition-colors shadow-sm"
               >
                 + Registrar Dinero Prestado
               </button>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredLoans.map((loan) => (
               <LoanCard
                 key={loan.id}

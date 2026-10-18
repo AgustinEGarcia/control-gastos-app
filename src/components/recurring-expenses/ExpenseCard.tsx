@@ -76,34 +76,34 @@ export function ExpenseCard({
 
   return (
     <div
-      className={`rounded-2xl p-5 border transition-all duration-200 ${
+      className={`rounded-xl p-5 border transition-colors ${
         expense.is_active
-          ? 'bg-zinc-900/80 border-zinc-800 hover:border-zinc-700 shadow-lg'
-          : 'bg-zinc-950/60 border-zinc-900 opacity-60'
+          ? 'bg-zinc-950 border-zinc-800/80 hover:border-zinc-700/80'
+          : 'bg-zinc-950/40 border-zinc-900 opacity-60'
       }`}
     >
       {/* Top Header */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <span className="w-10 h-10 rounded-xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-lg">
+          <span className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-sm">
             {icon}
           </span>
           <div>
-            <h3 className="font-semibold text-white text-base leading-snug">
+            <h3 className="font-medium text-zinc-100 text-sm leading-snug">
               {expense.name}
             </h3>
             <div className="flex flex-wrap items-center gap-2 mt-1">
-              <span className="text-xs text-zinc-400 font-medium">
+              <span className="text-xs text-zinc-400 font-mono">
                 {expense.category || 'General'}
               </span>
-              <span className="text-zinc-600">•</span>
+              <span className="text-zinc-700">•</span>
               <span className="text-xs text-emerald-400 font-mono">
                 Paga día {expense.payment_day}
               </span>
               {expense.payment_method && (
                 <>
-                  <span className="text-zinc-600">•</span>
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[11px] font-medium border border-zinc-700/60">
+                  <span className="text-zinc-700">•</span>
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-300 text-[10px] font-mono border border-zinc-800">
                     💳 {expense.payment_method.name}
                   </span>
                 </>
@@ -118,7 +118,7 @@ export function ExpenseCard({
             <button
               onClick={() => onEdit(expense)}
               title="Editar gasto fijo"
-              className="text-zinc-500 hover:text-emerald-400 p-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors text-sm"
+              className="text-zinc-500 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-900 transition-colors text-sm"
             >
               ✏️
             </button>
@@ -127,10 +127,10 @@ export function ExpenseCard({
             onClick={handleToggle}
             disabled={toggling}
             title={expense.is_active ? 'Pausar gasto' : 'Reactivar gasto'}
-            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+            className={`px-2 py-0.5 rounded text-[10px] font-mono border transition-colors ${
               expense.is_active
                 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-white'
+                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
             }`}
           >
             {toggling ? '...' : expense.is_active ? 'Activo' : 'Pausado'}
@@ -139,7 +139,7 @@ export function ExpenseCard({
             onClick={handleDelete}
             disabled={deleting}
             title="Eliminar gasto"
-            className="text-zinc-500 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10 transition-colors text-sm"
+            className="text-zinc-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-colors text-sm"
           >
             {deleting ? '...' : '🗑️'}
           </button>
@@ -149,7 +149,7 @@ export function ExpenseCard({
       {/* Montos y Comparativa */}
       <div className="pt-3 border-t border-zinc-800/60 grid grid-cols-2 gap-4">
         <div>
-          <span className="block text-[10px] uppercase font-semibold text-zinc-500 tracking-wider">
+          <span className="block text-[10px] uppercase font-mono font-medium text-zinc-500 tracking-wider">
             Estimado
           </span>
           <span className="font-mono text-zinc-200 font-medium text-sm mt-0.5 block">
@@ -158,7 +158,7 @@ export function ExpenseCard({
         </div>
 
         <div>
-          <span className="block text-[10px] uppercase font-semibold text-zinc-500 tracking-wider">
+          <span className="block text-[10px] uppercase font-mono font-medium text-zinc-500 tracking-wider">
             Real Facturado
           </span>
           {isEditingActual ? (
@@ -169,18 +169,18 @@ export function ExpenseCard({
                 value={actualInput}
                 onChange={(e) => setActualInput(e.target.value)}
                 placeholder="Monto real"
-                className="w-24 px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-24 px-2 py-1 rounded-md bg-zinc-900 border border-zinc-700 text-white font-mono text-xs focus:outline-none focus:border-zinc-500"
               />
               <button
                 onClick={handleSaveActual}
                 disabled={savingActual}
-                className="p-1 rounded bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold"
+                className="px-2 py-1 rounded-md bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-medium font-mono"
               >
                 ✓
               </button>
               <button
                 onClick={() => setIsEditingActual(false)}
-                className="p-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs"
+                className="p-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-400 text-xs"
               >
                 ✕
               </button>
@@ -199,7 +199,7 @@ export function ExpenseCard({
               <button
                 onClick={() => setIsEditingActual(true)}
                 title="Editar monto real de la factura"
-                className="text-xs text-zinc-500 hover:text-emerald-400 transition-colors"
+                className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
               >
                 ✏️
               </button>
@@ -210,12 +210,12 @@ export function ExpenseCard({
 
       {/* Variación */}
       {hasActual && (
-        <div className="mt-3 pt-2 border-t border-zinc-800/40 flex items-center justify-between text-[11px]">
+        <div className="mt-3 pt-2 border-t border-zinc-800/40 flex items-center justify-between text-[11px] font-mono">
           <span className="text-zinc-500">Desvío de factura:</span>
           <span
             className={`font-mono font-semibold ${
               variation > 0
-                ? 'text-red-400'
+                ? 'text-rose-400'
                 : variation < 0
                 ? 'text-emerald-400'
                 : 'text-zinc-400'

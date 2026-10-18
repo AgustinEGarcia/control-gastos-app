@@ -124,11 +124,11 @@ export function LoanForm({
   const isLent = loanType === 'lent';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80 mb-4">
           <div>
-            <h3 className="text-lg font-bold text-white">
+            <h3 className="text-base font-semibold text-zinc-100">
               {editingLoan
                 ? isLent
                   ? 'Editar Dinero Prestado'
@@ -137,7 +137,7 @@ export function LoanForm({
                 ? 'Registrar Dinero Prestado'
                 : 'Registrar Deuda / Préstamo Tomado'}
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-zinc-400">
               {editingLoan
                 ? 'Modifica los datos del préstamo registrado.'
                 : isLent
@@ -148,35 +148,35 @@ export function LoanForm({
           <button
             onClick={onClose}
             type="button"
-            className="text-slate-400 hover:text-white transition-colors p-1"
+            className="text-zinc-400 hover:text-white transition-colors p-1"
           >
             ✕
           </button>
         </div>
 
         {/* SELECTOR DE DIRECCIÓN DEL PRÉSTAMO */}
-        <div className="flex p-1 bg-slate-950 rounded-xl mb-5 border border-slate-800">
+        <div className="flex p-1 bg-zinc-900 rounded-lg mb-5 border border-zinc-800">
           <button
             type="button"
             onClick={() => setLoanType('lent')}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-1.5 text-xs font-mono font-medium rounded-md transition-colors flex items-center justify-center gap-1.5 ${
               isLent
-                ? 'bg-emerald-500 text-slate-950 shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-zinc-800 text-white border border-zinc-700'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <span>📤</span> Presté Dinero (A Cobrar)
+            Presté Dinero (A Cobrar)
           </button>
           <button
             type="button"
             onClick={() => setLoanType('borrowed')}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-1.5 text-xs font-mono font-medium rounded-md transition-colors flex items-center justify-center gap-1.5 ${
               !isLent
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-zinc-800 text-white border border-zinc-700'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <span>📥</span> Me Prestaron (A Pagar)
+            Me Prestaron (A Pagar)
           </button>
         </div>
 
@@ -372,23 +372,19 @@ export function LoanForm({
             />
           </div>
 
-          <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-800 mt-6">
+          <div className="pt-3 flex items-center justify-end gap-3 border-t border-zinc-800/80 mt-6">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-colors"
+              className="px-3.5 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`px-5 py-2.5 rounded-xl text-xs font-medium text-slate-950 shadow-lg transition-all disabled:opacity-50 ${
-                isLent
-                  ? 'bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20'
-                  : 'bg-indigo-500 hover:bg-indigo-400 text-white shadow-indigo-600/30'
-              }`}
+              className="px-4 py-2 rounded-lg text-xs font-medium bg-white hover:bg-zinc-200 text-zinc-950 transition-colors disabled:opacity-50"
             >
               {isSubmitting
                 ? 'Guardando...'

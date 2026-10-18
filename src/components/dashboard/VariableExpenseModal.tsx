@@ -122,58 +122,57 @@ export function VariableExpenseModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl relative max-h-[90vh] flex flex-col">
+      <div className="w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-xl p-6 shadow-2xl relative max-h-[90vh] flex flex-col">
         {/* CABECERA */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80 shrink-0">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xl">🛍️</span>
-              <h2 className="text-lg font-bold text-white">
+              <h2 className="text-base font-semibold text-zinc-100">
                 Gastos Variables — {monthName}
               </h2>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-zinc-400 mt-0.5">
               Define un monto genérico o desglosa varios gastos del mes.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg text-lg transition-colors"
+            className="text-zinc-400 hover:text-white p-1 rounded-lg text-base transition-colors"
           >
             ✕
           </button>
         </div>
 
         {/* SELECTOR DE MODALIDAD */}
-        <div className="grid grid-cols-2 gap-2 my-4 p-1 bg-slate-950 rounded-xl border border-slate-800 shrink-0">
+        <div className="grid grid-cols-2 gap-2 my-4 p-1 bg-zinc-900 rounded-lg border border-zinc-800 shrink-0">
           <button
             type="button"
             onClick={() => setMode('direct')}
-            className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+            className={`py-1.5 text-xs font-mono rounded-md transition-colors ${
               mode === 'direct'
-                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-zinc-800 text-white font-medium border border-zinc-700'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
-            💵 Monto Global Directo
+            Monto Global Directo
           </button>
           <button
             type="button"
             onClick={() => setMode('items')}
-            className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+            className={`py-1.5 text-xs font-mono rounded-md transition-colors ${
               mode === 'items'
-                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-zinc-800 text-white font-medium border border-zinc-700'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
-            📋 Desglose de Conceptos ({items.length})
+            Desglose ({items.length})
           </button>
         </div>
 
         {/* CONTENIDO SCROLLEABLE */}
         <div className="overflow-y-auto flex-1 pr-1 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1" htmlFor="var-name">
+            <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="var-name">
               Concepto Genérico
             </label>
             <input
@@ -182,13 +181,13 @@ export function VariableExpenseModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej: Gastos Varios, Imprevistos, Consumos"
-              className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors"
+              className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition-colors"
             />
           </div>
 
           {mode === 'direct' ? (
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1" htmlFor="var-amount">
+              <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="var-amount">
                 Monto Total Estimado ($)
               </label>
               <input
@@ -199,17 +198,17 @@ export function VariableExpenseModal({
                 value={directAmount}
                 onChange={(e) => setDirectAmount(e.target.value)}
                 placeholder="Ej: 1000000"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-lg font-bold text-purple-400 placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-lg font-bold font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
               />
-              <p className="text-[11px] text-slate-500 mt-1.5">
+              <p className="text-[11px] text-zinc-500 mt-1.5">
                 Ingresa una cifra fija para computar en los gastos totales del mes sin necesidad de anotar cada ítem.
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               {/* FORMULARIO PARA AGREGAR ÍTEM */}
-              <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-2">
-                <span className="text-[11px] font-semibold text-purple-300 uppercase tracking-wider block">
+              <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-lg space-y-2">
+                <span className="text-[11px] font-mono font-medium text-zinc-400 uppercase tracking-wider block">
                   + Agregar Concepto a la Suma
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
@@ -218,7 +217,7 @@ export function VariableExpenseModal({
                     value={newLabel}
                     onChange={(e) => setNewLabel(e.target.value)}
                     placeholder="Ej: Combustible, Supermercado..."
-                    className="sm:col-span-7 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                    className="sm:col-span-7 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
                   />
                   <input
                     type="number"
@@ -227,13 +226,13 @@ export function VariableExpenseModal({
                     value={newAmount}
                     onChange={(e) => setNewAmount(e.target.value)}
                     placeholder="Monto ($)"
-                    className="sm:col-span-3 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                    className="sm:col-span-3 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-mono text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
                   />
                   <button
                     type="button"
                     onClick={handleAddItem}
                     disabled={!newLabel.trim() || !newAmount}
-                    className="sm:col-span-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-xs font-semibold rounded-lg text-white transition-colors"
+                    className="sm:col-span-2 px-3 py-1.5 bg-white hover:bg-zinc-200 disabled:opacity-40 text-xs font-medium rounded-lg text-zinc-950 transition-colors"
                   >
                     Sumar
                   </button>
@@ -243,22 +242,22 @@ export function VariableExpenseModal({
               {/* LISTADO DE CONCEPTOS */}
               <div className="space-y-1.5">
                 {items.length === 0 ? (
-                  <div className="text-center py-6 text-slate-500 text-xs border border-dashed border-slate-800 rounded-xl">
+                  <div className="text-center py-6 text-zinc-500 text-xs border border-dashed border-zinc-800 rounded-lg">
                     Aún no agregaste conceptos. Usa el formulario superior para desglosar tus gastos.
                   </div>
                 ) : (
                   items.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-2.5 bg-slate-950/90 border border-slate-800/80 rounded-xl text-xs"
+                      className="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800 rounded-lg text-xs"
                     >
-                      <span className="font-medium text-white">{item.label}</span>
+                      <span className="font-medium text-zinc-200">{item.label}</span>
                       <div className="flex items-center gap-3">
-                        <strong className="text-purple-400 font-semibold">{formatMoney(item.amount)}</strong>
+                        <strong className="text-zinc-100 font-mono font-medium">{formatMoney(item.amount)}</strong>
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(item.id)}
-                          className="text-slate-500 hover:text-red-400 p-1 transition-colors"
+                          className="text-zinc-500 hover:text-rose-400 p-1 transition-colors"
                           title="Eliminar concepto"
                         >
                           ✕
@@ -273,10 +272,10 @@ export function VariableExpenseModal({
         </div>
 
         {/* PIE DEL MODAL CON TOTAL Y BOTONES */}
-        <div className="pt-4 mt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+        <div className="pt-4 mt-4 border-t border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
           <div>
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">Total a Sumar al Mes</span>
-            <span className="text-xl font-extrabold text-purple-400">
+            <span className="text-[10px] uppercase font-mono text-zinc-500 block">Total a Sumar al Mes</span>
+            <span className="text-xl font-bold font-mono text-zinc-100">
               {formatMoney(totalCalculado)}
             </span>
           </div>
@@ -285,7 +284,7 @@ export function VariableExpenseModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-2 text-xs font-semibold rounded-xl text-slate-400 hover:text-white transition-colors"
+              className="px-3.5 py-2 text-xs font-medium rounded-lg text-zinc-400 hover:text-white transition-colors"
             >
               Cancelar
             </button>
@@ -293,10 +292,10 @@ export function VariableExpenseModal({
               type="button"
               onClick={handleSubmit}
               disabled={saving}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-medium rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               {saving ? (
-                <span className="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="inline-block w-3.5 h-3.5 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin" />
               ) : (
                 'Guardar Partida Variable'
               )}

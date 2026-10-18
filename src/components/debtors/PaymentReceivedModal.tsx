@@ -61,42 +61,42 @@ export function PaymentReceivedModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-zinc-950 border border-zinc-800/80 rounded-xl w-full max-w-md p-5 shadow-2xl relative">
+        <div className="flex items-center justify-between pb-3.5 border-b border-zinc-800/80 mb-4">
           <div>
-            <h3 className="text-lg font-bold text-white">Registrar Cobro Recibido</h3>
-            <p className="text-xs text-slate-400">
-              Deudor: <span className="text-amber-400 font-semibold">{debtor.person.name}</span>
+            <h3 className="text-sm font-semibold text-white">Registrar Cobro Recibido</h3>
+            <p className="text-xs text-zinc-400 font-mono mt-0.5">
+              Deudor: <span className="text-zinc-200 font-medium">{debtor.person.name}</span>
             </p>
           </div>
           <button
             onClick={onClose}
             type="button"
-            className="text-slate-400 hover:text-white transition-colors p-1"
+            className="text-zinc-400 hover:text-white transition-colors p-1 text-xs"
           >
             ✕
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400">
+          <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg text-xs font-mono text-rose-400">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-medium text-slate-300">
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-mono text-zinc-300">
                 Monto Recibido ($ ARS) *
               </label>
               <button
                 type="button"
                 onClick={handlePayAll}
-                className="text-[11px] text-amber-400 hover:text-amber-300 font-medium underline"
+                className="text-[11px] font-mono text-amber-400 hover:text-amber-300 underline"
               >
-                Cobrar saldo total (${debtor.remaining_balance.toLocaleString('es-AR')})
+                Cobrar total (${debtor.remaining_balance.toLocaleString('es-AR')})
               </button>
             </div>
             <input
@@ -107,26 +107,26 @@ export function PaymentReceivedModal({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+            <label className="block text-xs font-mono text-zinc-300 mb-1">
               Fecha de Cobro *
             </label>
             <input
               type="date"
               value={paymentDate}
               onChange={(e) => setPaymentDate(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-zinc-500 transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+            <label className="block text-xs font-mono text-zinc-300 mb-1">
               Notas / Comprobante (Opcional)
             </label>
             <input
@@ -134,23 +134,23 @@ export function PaymentReceivedModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ej. Transferencia Mercado Pago / Efectivo"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition-colors"
             />
           </div>
 
-          <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-800 mt-6">
+          <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-zinc-800/80 mt-5">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-colors"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-zinc-400 hover:text-white transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30 transition-all disabled:opacity-50"
+              className="px-4 py-2 rounded-lg text-xs font-medium bg-white hover:bg-zinc-200 text-zinc-950 shadow-sm transition-colors disabled:opacity-50"
             >
               {isSubmitting ? 'Guardando...' : 'Acreditar Pago'}
             </button>

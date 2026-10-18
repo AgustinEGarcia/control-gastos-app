@@ -58,58 +58,58 @@ export function PaymentMethodForm({ onSuccess, onCancel, submitting, editingMeth
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-zinc-900 border border-zinc-800 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-5">
-          <h2 className="text-lg font-bold text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-lg rounded-xl bg-zinc-950 border border-zinc-800/80 p-5 shadow-2xl">
+        <div className="flex items-center justify-between pb-3.5 border-b border-zinc-800/80 mb-4">
+          <h2 className="text-sm font-semibold text-white">
             {editingMethod ? 'Editar Método de Pago' : 'Nuevo Método de Pago'}
           </h2>
           <button
             onClick={onCancel}
-            className="text-zinc-400 hover:text-white transition-colors text-sm p-1"
+            className="text-zinc-400 hover:text-white transition-colors text-xs p-1"
           >
             ✕
           </button>
         </div>
 
         {generalError && (
-          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+          <div className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-mono">
             {generalError}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
-            <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="method-name">
+            <label className="block text-xs font-mono text-zinc-300 mb-1" htmlFor="method-name">
               Nombre de la Tarjeta o Cuenta *
             </label>
             <input
               id="method-name"
               type="text"
               required
-              placeholder="Ej: Visa Santander, Mastercard Galicia, Mercado Crédito"
+              placeholder="Ej: Visa Santander, Mastercard Galicia"
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
                 if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
               }}
-              className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-xs focus:outline-none focus:border-zinc-500 transition-colors"
             />
-            {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+            {errors.name && <p className="text-rose-400 text-xs font-mono mt-1">{errors.name}</p>}
           </div>
 
-          <div className="bg-zinc-800/50 p-3.5 rounded-xl border border-zinc-800">
-            <span className="block text-xs font-medium text-zinc-300 mb-2">
+          <div className="bg-zinc-900/40 p-3 rounded-lg border border-zinc-800/80">
+            <span className="block text-xs font-mono text-zinc-300 mb-2">
               ¿A quién pertenece?
             </span>
-            <div className="flex gap-4 text-sm">
+            <div className="flex gap-4 text-xs font-mono">
               <label className="flex items-center gap-2 cursor-pointer text-zinc-200">
                 <input
                   type="radio"
                   name="ownership"
                   checked={isOwn}
                   onChange={() => setIsOwn(true)}
-                  className="accent-emerald-500"
+                  className="accent-white"
                 />
                 Tarjeta Propia
               </label>
@@ -119,7 +119,7 @@ export function PaymentMethodForm({ onSuccess, onCancel, submitting, editingMeth
                   name="ownership"
                   checked={!isOwn}
                   onChange={() => setIsOwn(false)}
-                  className="accent-emerald-500"
+                  className="accent-white"
                 />
                 Prestada / De Tercero
               </label>
@@ -127,7 +127,7 @@ export function PaymentMethodForm({ onSuccess, onCancel, submitting, editingMeth
 
             {!isOwn && (
               <div className="mt-3">
-                <label className="block text-xs font-medium text-zinc-400 mb-1" htmlFor="owner-name">
+                <label className="block text-xs font-mono text-zinc-400 mb-1" htmlFor="owner-name">
                   Nombre del Titular *
                 </label>
                 <input
@@ -139,16 +139,16 @@ export function PaymentMethodForm({ onSuccess, onCancel, submitting, editingMeth
                     setOwnerName(e.target.value);
                     if (errors.owner_name) setErrors((prev) => ({ ...prev, owner_name: '' }));
                   }}
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-xs focus:outline-none focus:border-zinc-500 transition-colors"
                 />
-                {errors.owner_name && <p className="text-red-400 text-xs mt-1">{errors.owner_name}</p>}
+                {errors.owner_name && <p className="text-rose-400 text-xs font-mono mt-1">{errors.owner_name}</p>}
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="closing-day">
+              <label className="block text-xs font-mono text-zinc-300 mb-1" htmlFor="closing-day">
                 Día de Cierre (1-31)
               </label>
               <input
@@ -162,13 +162,13 @@ export function PaymentMethodForm({ onSuccess, onCancel, submitting, editingMeth
                   setClosingDay(e.target.value);
                   if (errors.closing_day) setErrors((prev) => ({ ...prev, closing_day: '' }));
                 }}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-xs font-mono focus:outline-none focus:border-zinc-500 transition-colors"
               />
-              {errors.closing_day && <p className="text-red-400 text-xs mt-1">{errors.closing_day}</p>}
+              {errors.closing_day && <p className="text-rose-400 text-xs font-mono mt-1">{errors.closing_day}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="due-day">
+              <label className="block text-xs font-mono text-zinc-300 mb-1" htmlFor="due-day">
                 Día de Vencimiento (1-31)
               </label>
               <input
@@ -182,24 +182,24 @@ export function PaymentMethodForm({ onSuccess, onCancel, submitting, editingMeth
                   setDueDay(e.target.value);
                   if (errors.due_day) setErrors((prev) => ({ ...prev, due_day: '' }));
                 }}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-xs font-mono focus:outline-none focus:border-zinc-500 transition-colors"
               />
-              {errors.due_day && <p className="text-red-400 text-xs mt-1">{errors.due_day}</p>}
+              {errors.due_day && <p className="text-rose-400 text-xs font-mono mt-1">{errors.due_day}</p>}
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800 mt-6">
+          <div className="flex items-center justify-end gap-2.5 pt-3.5 border-t border-zinc-800/80 mt-5">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-zinc-400 hover:text-white transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-semibold transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-medium transition-colors shadow-sm disabled:opacity-50"
             >
               {submitting
                 ? 'Guardando...'

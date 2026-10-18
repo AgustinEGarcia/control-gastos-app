@@ -71,14 +71,13 @@ export function MonthlyDueList({
   });
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+    <div className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-5 sm:p-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
         <div>
-          <h3 className="text-base font-bold text-white flex items-center gap-2">
-            <span>📅</span>
+          <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-2">
             <span>Cronograma de Vencimientos y Pagos — {monthName}</span>
           </h3>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-zinc-400 mt-1">
             Marca los gastos pagados para actualizar tu balance mensual al instante.
           </p>
         </div>
@@ -87,14 +86,14 @@ export function MonthlyDueList({
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           {/* Selector de Tarjeta / Método de Pago */}
           <div className="flex items-center gap-2">
-            <label htmlFor="due-method-filter" className="text-xs text-slate-400 whitespace-nowrap font-medium">
-              💳 Tarjeta:
+            <label htmlFor="due-method-filter" className="text-xs text-zinc-400 whitespace-nowrap font-medium">
+              Tarjeta:
             </label>
             <select
               id="due-method-filter"
               value={selectedPaymentMethod}
               onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 max-w-[180px] truncate"
+              className="px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 focus:outline-none focus:border-zinc-600 max-w-[180px] truncate"
             >
               <option value="all">Todas las tarjetas</option>
               {availableMethods.map((pm) => (
@@ -107,14 +106,14 @@ export function MonthlyDueList({
           </div>
 
           {/* Filtros de Tipo / Estado */}
-          <div className="flex items-center gap-1.5 overflow-x-auto bg-slate-950 p-1.5 rounded-xl border border-slate-800/80">
+          <div className="flex items-center gap-1 overflow-x-auto bg-zinc-900 p-1 rounded-lg border border-zinc-800">
             <button
               type="button"
               onClick={() => setFilter('all')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors ${
                 filter === 'all'
-                  ? 'bg-slate-800 text-white'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-zinc-800 text-white font-medium'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Todos ({filteredItems.length})
@@ -122,10 +121,10 @@ export function MonthlyDueList({
             <button
               type="button"
               onClick={() => setFilter('pending')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors ${
                 filter === 'pending'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Pendientes
@@ -133,10 +132,10 @@ export function MonthlyDueList({
             <button
               type="button"
               onClick={() => setFilter('paid')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors ${
                 filter === 'paid'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Pagados
@@ -144,10 +143,10 @@ export function MonthlyDueList({
             <button
               type="button"
               onClick={() => setFilter('recurring')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors ${
                 filter === 'recurring'
-                  ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-zinc-800 text-zinc-200 border border-zinc-700 font-medium'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Fijos
@@ -155,10 +154,10 @@ export function MonthlyDueList({
             <button
               type="button"
               onClick={() => setFilter('own')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors ${
                 filter === 'own'
-                  ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-zinc-800 text-zinc-200 border border-zinc-700 font-medium'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Cuotas
@@ -166,10 +165,10 @@ export function MonthlyDueList({
             <button
               type="button"
               onClick={() => setFilter('variable')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors ${
                 filter === 'variable'
-                  ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-zinc-800 text-zinc-200 border border-zinc-700 font-medium'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Variables
@@ -180,87 +179,85 @@ export function MonthlyDueList({
 
 
       {filteredItems.length === 0 ? (
-        <div className="text-center py-12 text-slate-500 text-xs">
+        <div className="text-center py-12 text-zinc-500 text-xs">
           No hay gastos programados para este filtro en {monthName}.
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {filteredItems.map((item) => {
             const isProcessing = togglingId === item.id;
 
             return (
               <div
                 key={item.id}
-                className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                className={`p-3.5 sm:p-4 rounded-lg border transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                   item.isPaid
-                    ? 'bg-slate-950/40 border-emerald-950/40 opacity-85 hover:opacity-100'
-                    : 'bg-slate-950/90 border-slate-800/80 hover:border-slate-700/80'
+                    ? 'bg-zinc-950/60 border-zinc-800/50 opacity-80 hover:opacity-100'
+                    : 'bg-zinc-900/40 border-zinc-800/80 hover:border-zinc-700/80'
                 }`}
               >
                 <div className="flex items-start sm:items-center gap-3">
-                  <div className={`w-12 h-12 rounded-xl border flex flex-col items-center justify-center shrink-0 ${
+                  <div className={`w-11 h-11 rounded-lg border flex flex-col items-center justify-center shrink-0 ${
                     item.isPaid
-                      ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-400'
-                      : 'bg-slate-900 border-slate-800 text-slate-400'
+                      ? 'bg-emerald-950/20 border-emerald-900/30 text-emerald-400'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400'
                   }`}>
-                    <span className="text-[10px] uppercase font-semibold">Día</span>
-                    <span className="text-base font-bold leading-none text-white">{item.day}</span>
+                    <span className="text-[9px] uppercase font-mono font-medium text-zinc-500">Día</span>
+                    <span className="text-sm font-mono font-bold leading-none text-zinc-100">{item.day}</span>
                   </div>
 
                   <div>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       {item.isRefund ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                          <span>🟢</span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
                           <span>Devolución / Reintegro</span>
                         </span>
                       ) : (
                         <>
                           {item.type === 'recurring' && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">
                               Gasto Fijo
                             </span>
                           )}
                           {item.type === 'installment_own' && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">
                               Cuota Propia
                             </span>
                           )}
                           {item.type === 'installment_shared' && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-amber-400 border border-zinc-800">
                               Compartido ({item.beneficiaryName})
                             </span>
                           )}
                           {item.type === 'variable' && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
-                              <span>🛍️</span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800 flex items-center gap-1">
                               <span>Gasto Variable</span>
                             </span>
                           )}
                         </>
                       )}
 
-                      <span className="text-xs text-slate-400">{item.details}</span>
+                      <span className="text-xs text-zinc-400">{item.details}</span>
                       {item.type === 'variable' && onEditVariable && (
                         <button
                           type="button"
                           onClick={onEditVariable}
-                          className="text-[11px] text-purple-400 hover:text-purple-300 underline ml-1"
+                          className="text-[11px] font-mono text-zinc-400 hover:text-white underline ml-1"
                         >
                           (Editar conceptos)
                         </button>
                       )}
                     </div>
 
-                    <h4 className={`text-sm font-semibold ${item.isPaid ? 'text-slate-300 line-through decoration-emerald-500/40' : 'text-white'}`}>
+                    <h4 className={`text-sm font-medium ${item.isPaid ? 'text-zinc-400 line-through decoration-emerald-500/40' : 'text-zinc-100'}`}>
                       {item.title}
                     </h4>
-                    <p className="text-[11px] text-slate-400">Vencimiento: {item.fullDate}</p>
+                    <p className="text-[11px] font-mono text-zinc-500">Vencimiento: {item.fullDate}</p>
                   </div>
                 </div>
 
-                <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-slate-800/80 pt-2 sm:pt-0 gap-2">
-                  <span className={`text-base font-bold tracking-tight ${item.isRefund ? 'text-emerald-400' : item.isPaid ? 'text-emerald-400' : 'text-white'}`}>
+                <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-zinc-800/80 pt-2 sm:pt-0 gap-2">
+                  <span className={`text-base font-bold font-mono tracking-tight ${item.isRefund ? 'text-emerald-400' : item.isPaid ? 'text-emerald-400' : 'text-zinc-100'}`}>
                     {item.isRefund ? `-${formatMoney(item.amount)}` : formatMoney(item.amount)}
                   </span>
 
@@ -272,10 +269,10 @@ export function MonthlyDueList({
                           type="button"
                           disabled={shiftingId === item.id || isProcessing}
                           onClick={() => onAdvanceNextInstallment(item)}
-                          className="px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-[11px] font-semibold text-indigo-300 hover:bg-indigo-500/25 hover:text-indigo-200 transition-all shadow-sm flex items-center gap-1"
+                          className="px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-700 text-[11px] font-mono text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-1"
                           title="La tarjeta cobró 2 cuotas juntas en este resumen: trae la siguiente cuota a este mismo mes para sumar el doble"
                         >
-                          {shiftingId === item.id ? '⏳' : '⚡ Cobro doble (+1 cuota)'}
+                          {shiftingId === item.id ? '⏳' : '+1 cuota (doble)'}
                         </button>
                       )}
 
@@ -284,10 +281,10 @@ export function MonthlyDueList({
                           type="button"
                           disabled={shiftingId === item.id || isProcessing}
                           onClick={() => onShiftInstallment(item, 1)}
-                          className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700/80 text-[11px] text-slate-300 hover:text-amber-300 hover:border-amber-500/40 transition-colors shadow-sm"
+                          className="px-2 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-300 hover:text-amber-400 hover:border-zinc-700 transition-colors"
                           title="La tarjeta no facturó esta cuota este mes: postergarla al mes siguiente (+1 mes)"
                         >
-                          {shiftingId === item.id ? '⏳' : '⏭️ Saltear (+1m)'}
+                          {shiftingId === item.id ? '⏳' : 'Saltear (+1m)'}
                         </button>
                       )}
 
@@ -296,10 +293,10 @@ export function MonthlyDueList({
                           type="button"
                           disabled={shiftingId === item.id || isProcessing}
                           onClick={() => onShiftInstallment(item, -1)}
-                          className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700/80 text-[11px] text-slate-400 hover:text-blue-300 hover:border-blue-500/40 transition-colors shadow-sm"
+                          className="px-2 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
                           title="Mover cuota al mes anterior (-1 mes)"
                         >
-                          ⏮️ -1m
+                          -1m
                         </button>
                       )}
                     </div>
@@ -311,10 +308,10 @@ export function MonthlyDueList({
                       type="button"
                       disabled={isProcessing}
                       onClick={() => onTogglePaid(item)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors ${
                         item.isPaid
-                          ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/30'
-                          : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-emerald-500/40 hover:text-emerald-300 hover:bg-slate-800/80'
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-500/20'
+                          : 'bg-white text-zinc-950 hover:bg-zinc-200'
                       } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                       title={item.isPaid ? 'Hacer clic para marcar como pendiente' : 'Hacer clic para marcar como pagado'}
                     >
@@ -327,17 +324,17 @@ export function MonthlyDueList({
                         </>
                       ) : (
                         <>
-                          <span className="text-slate-500">○</span>
+                          <span>○</span>
                           <span>Marcar Pagado</span>
                         </>
                       )}
                     </button>
                   ) : (
                     <span
-                      className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${
+                      className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${
                         item.isPaid
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-slate-800 text-slate-400'
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                          : 'bg-zinc-900 text-zinc-400 border-zinc-800'
                       }`}
                     >
                       {item.isPaid ? 'Pagado' : 'Pendiente'}

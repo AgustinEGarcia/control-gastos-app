@@ -50,29 +50,29 @@ export default function AlertasPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-black text-zinc-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* HEADER DE LA SECCIÓN */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-zinc-800/80">
           <div>
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🔔</span>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <div className="flex items-center gap-2">
+              <span className="text-zinc-400 font-mono text-sm">/</span>
+              <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
                 Alertas Preventivas de Vencimiento
               </h1>
             </div>
-            <p className="text-sm text-slate-400 mt-1">
-              Monitoreo y despacho automático de notificaciones por email (Resend) 24 horas antes de cada pago.
+            <p className="text-xs text-zinc-400 mt-1 font-mono">
+              Monitoreo y despacho programado de notificaciones por email preventivas (Resend) 24 horas antes de cada pago.
             </p>
           </div>
         </div>
 
         {errorMsg && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400 flex items-center justify-between">
+          <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs font-mono text-rose-400 flex items-center justify-between">
             <span>{errorMsg}</span>
             <button
               onClick={() => loadData()}
-              className="text-xs font-semibold underline hover:text-white ml-4"
+              className="text-xs font-medium underline hover:text-white ml-4"
             >
               Reintentar
             </button>
@@ -80,11 +80,11 @@ export default function AlertasPage() {
         )}
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[1, 2, 3].map((n) => (
               <div
                 key={n}
-                className="h-44 bg-slate-900/40 rounded-2xl border border-slate-800/80 animate-pulse"
+                className="h-44 bg-zinc-950 rounded-xl border border-zinc-800/80 animate-pulse"
               />
             ))}
           </div>

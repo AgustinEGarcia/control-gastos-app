@@ -22,6 +22,11 @@ Memoria del proyecto entre sesiones. Máximo ~50 líneas: resumir o eliminar lo 
 - Git Push: El PAT no posee permisos `workflow`. Los crons residen en `vercel.json`.
 - Eliminación de Personas: Siempre validar transacciones, préstamos y abonos antes de permitir el borrado.
 
+- Spec 019 (Rediseño Estético Integral — Minimalismo Técnico Linear/Vercel): 100% completado.
+  - Todas las vistas (Dashboard, Gastos Fijos, Transacciones y Cuotas, Préstamos, Deudores, Métodos de Pago, Alertas y Personas) migradas al estilo sobrio, monocromático zinc-950/black, bordes estructurados finos, datos financieros en `font-mono`, botones de alto contraste y badges semánticos discretos.
+  - Ruta de laboratorio temporal `/estilos-demo` desmantelada.
+  - Pruebas: 112 pruebas unitarias Vitest y 28 pruebas Playwright E2E pasando 100% en verde sin regresiones.
+
 ## Próximos pasos
-- Realizar commit con Conventional Commits y push a GitHub tras el visto bueno del usuario.
+- Recibir del usuario los requerimientos e ideas de las nuevas funcionalidades para iniciar su ciclo SDD.
 

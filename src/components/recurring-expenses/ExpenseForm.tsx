@@ -76,10 +76,10 @@ export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-zinc-900 border border-zinc-800 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-5">
-          <h2 className="text-lg font-bold text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg rounded-xl bg-zinc-950 border border-zinc-800 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80 mb-5">
+          <h2 className="text-base font-semibold text-zinc-100">
             {editingExpense ? 'Editar Gasto Fijo Recurrente' : 'Nuevo Gasto Fijo Recurrente'}
           </h2>
           <button
@@ -91,7 +91,7 @@ export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = 
         </div>
 
         {generalError && (
-          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+          <div className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-mono">
             {generalError}
           </div>
         )}
@@ -111,9 +111,9 @@ export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = 
                 setName(e.target.value);
                 if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
               }}
-              className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder-zinc-500 text-xs focus:outline-none focus:border-zinc-500"
             />
-            {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+            {errors.name && <p className="text-rose-400 text-xs mt-1 font-mono">{errors.name}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -125,7 +125,7 @@ export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = 
                 id="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 text-xs focus:outline-none focus:border-zinc-500"
               >
                 {CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
@@ -151,9 +151,9 @@ export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = 
                   setPaymentDay(e.target.value);
                   if (errors.payment_day) setErrors((prev) => ({ ...prev, payment_day: '' }));
                 }}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 font-mono placeholder-zinc-500 text-xs focus:outline-none focus:border-zinc-500"
               />
-              {errors.payment_day && <p className="text-red-400 text-xs mt-1">{errors.payment_day}</p>}
+              {errors.payment_day && <p className="text-rose-400 text-xs mt-1 font-mono">{errors.payment_day}</p>}
             </div>
           </div>
 
@@ -165,7 +165,7 @@ export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = 
               id="expense-payment-method"
               value={paymentMethodId}
               onChange={(e) => setPaymentMethodId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 text-xs focus:outline-none focus:border-zinc-500"
             >
               <option value="">Sin tarjeta (Débito en cuenta / Efectivo)</option>
               {paymentMethods.map((pm) => (
@@ -196,9 +196,9 @@ export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = 
                   setEstimatedAmount(e.target.value);
                   if (errors.estimated_amount) setErrors((prev) => ({ ...prev, estimated_amount: '' }));
                 }}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 font-mono placeholder-zinc-500 text-xs focus:outline-none focus:border-zinc-500"
               />
-              {errors.estimated_amount && <p className="text-red-400 text-xs mt-1">{errors.estimated_amount}</p>}
+              {errors.estimated_amount && <p className="text-rose-400 text-xs mt-1 font-mono">{errors.estimated_amount}</p>}
             </div>
 
             <div>
@@ -216,24 +216,24 @@ export function ExpenseForm({ onSuccess, onCancel, submitting, paymentMethods = 
                   setActualAmount(e.target.value);
                   if (errors.actual_amount) setErrors((prev) => ({ ...prev, actual_amount: '' }));
                 }}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 font-mono placeholder-zinc-500 text-xs focus:outline-none focus:border-zinc-500"
               />
-              {errors.actual_amount && <p className="text-red-400 text-xs mt-1">{errors.actual_amount}</p>}
+              {errors.actual_amount && <p className="text-rose-400 text-xs mt-1 font-mono">{errors.actual_amount}</p>}
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800 mt-6">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800/80 mt-6">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+              className="px-3.5 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-semibold transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {submitting
                 ? 'Guardando...'

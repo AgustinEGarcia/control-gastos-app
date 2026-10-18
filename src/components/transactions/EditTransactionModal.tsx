@@ -123,12 +123,12 @@ export function EditTransactionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-xl w-full max-w-lg p-6 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80 mb-5">
           <div>
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <span>✏️</span> Editar Compra / Financiación
+            <h3 className="text-base font-semibold text-zinc-100 flex items-center gap-2">
+              Editar Compra / Financiación
             </h3>
             <p className="text-xs text-zinc-400 mt-0.5">
               Corrige montos, cuotas, fechas o destinatarios. El plan de pagos se recalculará automáticamente.
@@ -402,19 +402,19 @@ export function EditTransactionModal({
             )}
           </div>
 
-          <div className="pt-3 flex items-center justify-end gap-3 border-t border-zinc-800 mt-6">
+          <div className="pt-3 flex items-center justify-end gap-3 border-t border-zinc-800/80 mt-6">
             <button
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-4 py-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
+              className="px-3.5 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-semibold transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-medium transition-colors disabled:opacity-50"
             >
               {submitting ? 'Guardando...' : 'Guardar Cambios'}
             </button>

@@ -172,10 +172,10 @@ export function TransactionForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="w-full max-w-lg rounded-2xl bg-zinc-900 border border-zinc-800 p-6 shadow-2xl my-8 animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-4">
-          <h2 className="text-lg font-bold text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="w-full max-w-lg rounded-xl bg-zinc-950 border border-zinc-800 p-6 shadow-2xl my-8 animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80 mb-4">
+          <h2 className="text-base font-semibold text-zinc-100">
             {mode === 'installment' ? 'Registrar Compra / Financiación' : 'Registrar Cargo Fijo / Suscripción'}
           </h2>
           <button
@@ -187,7 +187,7 @@ export function TransactionForm({
         </div>
 
         {/* Selector de Tipo de Operación: Cuotas vs Suscripción */}
-        <div className="flex p-1 bg-zinc-800/80 rounded-xl mb-5 border border-zinc-700/50">
+        <div className="flex p-1 bg-zinc-900 rounded-lg mb-5 border border-zinc-800">
           <button
             type="button"
             onClick={() => {
@@ -195,13 +195,13 @@ export function TransactionForm({
               setErrors({});
               setGeneralError(null);
             }}
-            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 py-1.5 rounded-md text-xs font-mono font-medium transition-colors flex items-center justify-center gap-1.5 ${
               mode === 'installment'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md'
+                ? 'bg-zinc-800 text-white border border-zinc-700'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <span>💳</span> Compra en Cuotas (1-60)
+            Compra en Cuotas
           </button>
           <button
             type="button"
@@ -210,13 +210,13 @@ export function TransactionForm({
               setErrors({});
               setGeneralError(null);
             }}
-            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 py-1.5 rounded-md text-xs font-mono font-medium transition-colors flex items-center justify-center gap-1.5 ${
               mode === 'subscription'
-                ? 'bg-emerald-500 text-zinc-950 shadow-md'
+                ? 'bg-zinc-800 text-white border border-zinc-700'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <span>🔄</span> Cargo Permanente en Tarjeta
+            Cargo Permanente en Tarjeta
           </button>
         </div>
 
@@ -648,18 +648,18 @@ export function TransactionForm({
             </>
           )}
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800 mt-6">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800/80 mt-6">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+              className="px-3.5 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-semibold transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {submitting
                 ? 'Guardando...'

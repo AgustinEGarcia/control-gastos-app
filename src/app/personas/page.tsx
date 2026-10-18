@@ -129,256 +129,258 @@ export default function PersonasPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1">
-      {/* Header y Acción */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            👥 Personas y Terceros
-          </h1>
-          <p className="text-sm text-zinc-400 mt-1">
-            Administra los contactos a quienes prestas tarjetas o realizas préstamos de dinero.
-          </p>
-        </div>
-
-        <button
-          onClick={() => {
-            setErrorMsg(null);
-            setIsCreateOpen(true);
-          }}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
-        >
-          <span className="text-base leading-none">+</span>
-          <span>Nueva Persona</span>
-        </button>
-      </div>
-
-      {/* Alertas informativas */}
-      {errorMsg && (
-        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between">
-          <span>⚠️ {errorMsg}</span>
-          <button onClick={() => setErrorMsg(null)} className="text-zinc-500 hover:text-zinc-300 ml-4">
-            ✕
-          </button>
-        </div>
-      )}
-
-      {successMsg && (
-        <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm flex items-center justify-between">
-          <span>✅ {successMsg}</span>
-          <button onClick={() => setSuccessMsg(null)} className="text-zinc-500 hover:text-zinc-300 ml-4">
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* Contador o Resumen */}
-      <div className="mb-6 flex items-center justify-between">
-        <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-          Listado de Personas ({people.length})
-        </span>
-      </div>
-
-      {/* Lista de Personas o Estado Vacío */}
-      {loading ? (
-        <div className="space-y-3 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 rounded-xl bg-zinc-900/80 border border-zinc-800" />
-          ))}
-        </div>
-      ) : people.length === 0 ? (
-        <div className="text-center py-16 px-4 rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20">
-          <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-2xl flex items-center justify-center mx-auto mb-4">
-            👥
+    <div className="min-h-screen bg-black text-zinc-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header y Acción */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-zinc-400 font-mono text-sm">/</span>
+              <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
+                Personas y Terceros
+              </h1>
+            </div>
+            <p className="text-xs text-zinc-400 mt-1 font-mono">
+              Directorio de personas y contactos vinculados a compras compartidas y préstamos.
+            </p>
           </div>
-          <h3 className="text-lg font-semibold text-white">
-            No tienes personas registradas
-          </h3>
-          <p className="text-sm text-zinc-400 max-w-md mx-auto mt-1 mb-6">
-            Agrega contactos para asignarles compras compartidas con tarjeta o préstamos personales.
-          </p>
+
           <button
-            onClick={() => setIsCreateOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-sm transition-all"
+            onClick={() => {
+              setErrorMsg(null);
+              setIsCreateOpen(true);
+            }}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 font-medium text-xs transition-colors shadow-sm"
           >
-            + Registrar primera persona
+            <span>+</span>
+            <span>Nueva Persona</span>
           </button>
         </div>
-      ) : (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 overflow-hidden shadow-sm">
-          <div className="divide-y divide-zinc-800">
-            {people.map((person) => (
-              <div
-                key={person.id}
-                className="p-4 sm:px-6 flex items-center justify-between gap-4 hover:bg-zinc-800/30 transition-colors"
-              >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700/60 flex items-center justify-center text-sm font-bold text-white shrink-0">
-                    {person.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-semibold text-white truncate">
-                      {person.name}
-                    </h3>
-                    <p className="text-xs text-zinc-400 truncate">
-                      {person.email ? `✉️ ${person.email}` : 'Sin correo registrado'}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleOpenEdit(person)}
-                    title="Editar datos"
-                    className="p-2 rounded-lg text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors text-sm"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() => handleDelete(person)}
-                    disabled={deletingId === person.id}
-                    title="Eliminar persona"
-                    className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors text-sm"
-                  >
-                    {deletingId === person.id ? '...' : '🗑️'}
-                  </button>
-                </div>
-              </div>
+        {/* Alertas informativas */}
+        {errorMsg && (
+          <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-mono flex items-center justify-between">
+            <span>{errorMsg}</span>
+            <button onClick={() => setErrorMsg(null)} className="text-zinc-400 hover:text-white ml-4">
+              ✕
+            </button>
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono flex items-center justify-between">
+            <span>{successMsg}</span>
+            <button onClick={() => setSuccessMsg(null)} className="text-zinc-400 hover:text-white ml-4">
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Contador o Resumen */}
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">
+            Listado de Personas ({people.length})
+          </span>
+        </div>
+
+        {/* Lista de Personas o Estado Vacío */}
+        {loading ? (
+          <div className="space-y-2.5 animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-14 rounded-xl bg-zinc-950 border border-zinc-800/80" />
             ))}
           </div>
-        </div>
-      )}
+        ) : people.length === 0 ? (
+          <div className="text-center py-16 px-4 rounded-xl border border-zinc-800/80 bg-zinc-950">
+            <h3 className="text-sm font-medium text-white mb-1">
+              No tienes personas registradas
+            </h3>
+            <p className="text-xs text-zinc-400 max-w-md mx-auto mb-5 font-mono">
+              Agrega contactos para asignarles compras compartidas con tarjeta o préstamos personales.
+            </p>
+            <button
+              onClick={() => setIsCreateOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 font-medium text-xs transition-colors shadow-sm"
+            >
+              + Registrar primera persona
+            </button>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-zinc-800/80 bg-zinc-950 overflow-hidden">
+            <div className="divide-y divide-zinc-800/80">
+              {people.map((person) => (
+                <div
+                  key={person.id}
+                  className="p-3.5 sm:px-5 flex items-center justify-between gap-4 hover:bg-zinc-900/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-mono text-zinc-300 shrink-0">
+                      {person.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-xs font-medium text-white truncate">
+                        {person.name}
+                      </h3>
+                      <p className="text-[11px] text-zinc-400 font-mono truncate">
+                        {person.email ? person.email : 'Sin correo registrado'}
+                      </p>
+                    </div>
+                  </div>
 
-      {/* Modal Alta de Persona */}
-      {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-zinc-900 border border-zinc-800 p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800 mb-4">
-              <h2 className="text-base font-bold text-white">Registrar Nueva Persona</h2>
-              <button
-                onClick={() => setIsCreateOpen(false)}
-                className="text-zinc-400 hover:text-white transition-colors"
-              >
-                ✕
-              </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleOpenEdit(person)}
+                      title="Editar datos"
+                      className="p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors text-xs font-mono"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      onClick={() => handleDelete(person)}
+                      disabled={deletingId === person.id}
+                      title="Eliminar persona"
+                      className="p-1.5 rounded-md text-zinc-400 hover:text-rose-400 hover:bg-zinc-900 transition-colors text-xs font-mono"
+                    >
+                      {deletingId === person.id ? '...' : '✕'}
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
+          </div>
+        )}
 
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="p-name">
-                  Nombre Completo *
-                </label>
-                <input
-                  id="p-name"
-                  type="text"
-                  required
-                  placeholder="Ej: Juan Pérez"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="p-email">
-                  Correo Electrónico (Opcional)
-                </label>
-                <input
-                  id="p-email"
-                  type="email"
-                  placeholder="juan@ejemplo.com"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                />
-                <p className="text-[11px] text-zinc-500 mt-1">
-                  Permite compartir estados de cuenta o recordatorios.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
+        {/* Modal Alta de Persona */}
+        {isCreateOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="w-full max-w-md rounded-xl bg-zinc-950 border border-zinc-800/80 p-5 shadow-2xl">
+              <div className="flex items-center justify-between pb-3.5 border-b border-zinc-800/80 mb-4">
+                <h2 className="text-sm font-semibold text-white">Registrar Nueva Persona</h2>
                 <button
-                  type="button"
                   onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+                  className="text-zinc-400 hover:text-white transition-colors text-xs p-1"
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs transition-all shadow-md active:scale-95 disabled:opacity-50"
-                >
-                  {creating ? 'Guardando...' : 'Crear Persona'}
+                  ✕
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
 
-      {/* Modal Edición de Persona */}
-      {editingPerson && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-zinc-900 border border-zinc-800 p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800 mb-4">
-              <h2 className="text-base font-bold text-white">Editar Persona</h2>
-              <button
-                onClick={() => setEditingPerson(null)}
-                className="text-zinc-400 hover:text-white transition-colors"
-              >
-                ✕
-              </button>
+              <form onSubmit={handleCreate} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-mono text-zinc-300 mb-1" htmlFor="p-name">
+                    Nombre Completo *
+                  </label>
+                  <input
+                    id="p-name"
+                    type="text"
+                    required
+                    placeholder="Ej: Juan Pérez"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-xs focus:outline-none focus:border-zinc-500 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono text-zinc-300 mb-1" htmlFor="p-email">
+                    Correo Electrónico (Opcional)
+                  </label>
+                  <input
+                    id="p-email"
+                    type="email"
+                    placeholder="juan@ejemplo.com"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-xs focus:outline-none focus:border-zinc-500 transition-colors"
+                  />
+                  <p className="text-[10px] text-zinc-500 font-mono mt-1">
+                    Permite compartir estados de cuenta o recordatorios.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-end gap-2.5 pt-3.5 border-t border-zinc-800/80 mt-5">
+                  <button
+                    type="button"
+                    onClick={() => setIsCreateOpen(false)}
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-zinc-400 hover:text-white transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    className="px-4 py-2 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 font-medium text-xs transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    {creating ? 'Guardando...' : 'Crear Persona'}
+                  </button>
+                </div>
+              </form>
             </div>
-
-            <form onSubmit={handleUpdate} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="edit-p-name">
-                  Nombre Completo *
-                </label>
-                <input
-                  id="edit-p-name"
-                  type="text"
-                  required
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1" htmlFor="edit-p-email">
-                  Correo Electrónico (Opcional)
-                </label>
-                <input
-                  id="edit-p-email"
-                  type="email"
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
-                <button
-                  type="button"
-                  onClick={() => setEditingPerson(null)}
-                  className="px-4 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={updating}
-                  className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs transition-all shadow-md active:scale-95 disabled:opacity-50"
-                >
-                  {updating ? 'Guardando...' : 'Guardar Cambios'}
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Modal Edición de Persona */}
+        {editingPerson && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="w-full max-w-md rounded-xl bg-zinc-950 border border-zinc-800/80 p-5 shadow-2xl">
+              <div className="flex items-center justify-between pb-3.5 border-b border-zinc-800/80 mb-4">
+                <h2 className="text-sm font-semibold text-white">Editar Persona</h2>
+                <button
+                  onClick={() => setEditingPerson(null)}
+                  className="text-zinc-400 hover:text-white transition-colors text-xs p-1"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdate} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-mono text-zinc-300 mb-1" htmlFor="edit-p-name">
+                    Nombre Completo *
+                  </label>
+                  <input
+                    id="edit-p-name"
+                    type="text"
+                    required
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs focus:outline-none focus:border-zinc-500 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono text-zinc-300 mb-1" htmlFor="edit-p-email">
+                    Correo Electrónico (Opcional)
+                  </label>
+                  <input
+                    id="edit-p-email"
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs focus:outline-none focus:border-zinc-500 transition-colors"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2.5 pt-3.5 border-t border-zinc-800/80 mt-5">
+                  <button
+                    type="button"
+                    onClick={() => setEditingPerson(null)}
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-zinc-400 hover:text-white transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updating}
+                    className="px-4 py-2 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 font-medium text-xs transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    {updating ? 'Guardando...' : 'Guardar Cambios'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

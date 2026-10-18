@@ -22,44 +22,41 @@ export function ExpenseSummaryCards({ totals }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
       {/* Total Estimado */}
-      <div className="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800 backdrop-blur-sm">
+      <div className="p-5 rounded-xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors">
         <div className="flex items-center justify-between text-zinc-400 mb-2">
-          <span className="text-xs font-medium uppercase tracking-wider">Presupuesto Estimado</span>
-          <span className="text-base">📅</span>
+          <span className="text-xs font-mono font-medium uppercase tracking-wider">Presupuesto Estimado</span>
         </div>
-        <p className="text-2xl sm:text-3xl font-bold text-white font-mono tracking-tight">
+        <p className="text-2xl sm:text-3xl font-bold text-zinc-100 font-mono tracking-tight">
           {formatCurrency(totals.totalEstimated)}
         </p>
-        <span className="text-[11px] text-zinc-500 mt-1 block">
+        <span className="text-[11px] font-mono text-zinc-500 mt-1 block">
           {totals.countActive} gastos activos este mes
         </span>
       </div>
 
       {/* Total Real Facturado */}
-      <div className="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800 backdrop-blur-sm">
+      <div className="p-5 rounded-xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors">
         <div className="flex items-center justify-between text-zinc-400 mb-2">
-          <span className="text-xs font-medium uppercase tracking-wider">Total Facturado Real</span>
-          <span className="text-base">🧾</span>
+          <span className="text-xs font-mono font-medium uppercase tracking-wider">Total Facturado Real</span>
         </div>
         <p className="text-2xl sm:text-3xl font-bold text-emerald-400 font-mono tracking-tight">
           {formatCurrency(totals.totalActual)}
         </p>
-        <span className="text-[11px] text-zinc-500 mt-1 block">
-          Actualizado con montos de facturas recibidas
+        <span className="text-[11px] font-mono text-zinc-500 mt-1 block">
+          Actualizado con facturas recibidas
         </span>
       </div>
 
       {/* Variación / Diferencia */}
-      <div className="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800 backdrop-blur-sm">
+      <div className="p-5 rounded-xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors">
         <div className="flex items-center justify-between text-zinc-400 mb-2">
-          <span className="text-xs font-medium uppercase tracking-wider">Variación Presupuestaria</span>
-          <span className="text-base">📊</span>
+          <span className="text-xs font-mono font-medium uppercase tracking-wider">Variación Presupuestaria</span>
         </div>
         <div className="flex items-baseline gap-2">
           <p
             className={`text-2xl sm:text-3xl font-bold font-mono tracking-tight ${
               isDiffPositive
-                ? 'text-red-400'
+                ? 'text-rose-400'
                 : isDiffNegative
                 ? 'text-emerald-400'
                 : 'text-zinc-300'
@@ -70,11 +67,11 @@ export function ExpenseSummaryCards({ totals }: Props) {
           </p>
         </div>
         <span
-          className={`text-[11px] font-medium mt-1 inline-block ${
+          className={`text-[11px] font-mono mt-1 inline-block ${
             isDiffPositive
-              ? 'text-red-400/90'
+              ? 'text-rose-400'
               : isDiffNegative
-              ? 'text-emerald-400/90'
+              ? 'text-emerald-400'
               : 'text-zinc-500'
           }`}
         >

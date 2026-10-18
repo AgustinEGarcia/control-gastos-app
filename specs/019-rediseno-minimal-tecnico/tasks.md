@@ -1,0 +1,30 @@
+# Tareas de Implementación — Spec 019: Rediseño Minimalismo Técnico
+
+- [x] **Tarea 1**: Configurar y formalizar `tasks.md`
+- [x] **Tarea 2**: Aplicar estética minimalista técnica en Shell y Navegación (`Navbar.tsx`)
+- [x] **Tarea 3**: Rediseñar componentes del Dashboard:
+  - [x] `MonthSelector.tsx`
+  - [x] `DashboardMetricCards.tsx`
+  - [x] `PaymentMethodTotals.tsx`
+  - [x] `MonthlyDueList.tsx`
+  - [x] `VariableExpenseModal.tsx`
+  - [x] `src/app/dashboard/page.tsx`
+- [x] **Tarea 4**: Rediseñar componentes de Gastos Recurrentes / Fijos:
+  - [x] `ExpenseSummaryCards.tsx`
+  - [x] `ExpenseCard.tsx`
+  - [x] `ExpenseForm.tsx`
+  - [x] `src/app/gastos-recurrentes/page.tsx`
+- [x] **Tarea 5**: Rediseñar componentes de Tarjetas y Cuotas:
+  - [x] `TransactionSummaryCards.tsx`
+  - [x] `TransactionCard.tsx`
+  - [x] `TransactionRow.tsx`
+  - [x] `TransactionForm.tsx`
+  - [x] `EditTransactionModal.tsx`
+- [x] **Tarea 6**: Rediseñar componentes de Préstamos, Deudores, Métodos de Pago y Alertas:
+  - [x] `LoanSummaryCards.tsx`, `LoanCard.tsx`, `LoanForm.tsx`, `LoanRepaymentModal.tsx`, `src/app/prestamos/page.tsx`
+  - [x] `DebtorSummaryCards.tsx`, `DebtorCard.tsx`, `PaymentReceivedModal.tsx`, `src/app/deudores/page.tsx`
+  - [x] `PaymentMethodCard.tsx`, `PaymentMethodForm.tsx`, `src/app/metodos-pago/page.tsx`
+  - [x] `AlertsOverview.tsx`, `src/app/alertas/page.tsx`, `src/app/personas/page.tsx`
+- [x] **Tarea 7**: Limpieza y desmantelamiento de `/estilos-demo`
+- [x] **Tarea 8**: Ejecución y validación de suite de pruebas unitarias (`npm test`) y E2E (`npm run test:e2e`)
+- [x] **Tarea 9**: Actualizar `MEMORY.md` y realizar commit con Conventional Commits y push al repositorio remoto

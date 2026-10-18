@@ -130,10 +130,10 @@ export default function GastosRecurrentesPage() {
       {/* Header y Acción Principal */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            📋 Gastos Fijos Recurrentes
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-100">
+            Gastos Fijos Recurrentes
           </h1>
-          <p className="text-sm text-zinc-400 mt-1">
+          <p className="text-xs text-zinc-400 mt-1">
             Plantilla mensual de gastos 100% propios, fechas de pago y ajuste a facturas reales.
           </p>
         </div>
@@ -143,9 +143,9 @@ export default function GastosRecurrentesPage() {
             setEditingExpense(null);
             setIsFormOpen(true);
           }}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 font-medium text-xs transition-colors"
         >
-          <span className="text-base leading-none">+</span>
+          <span>+</span>
           <span>Nuevo Gasto Fijo</span>
         </button>
       </div>
@@ -154,22 +154,22 @@ export default function GastosRecurrentesPage() {
       <ExpenseSummaryCards totals={totals} />
 
       {errorMsg && (
-        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-          ⚠️ {errorMsg}
+        <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-mono">
+          {errorMsg}
         </div>
       )}
 
       {/* Filtro por Categorías */}
       {categories.length > 2 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-4 mb-6 scrollbar-none">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+              className={`px-2.5 py-1 rounded-md text-xs font-mono whitespace-nowrap transition-colors ${
                 selectedCategory === cat
-                  ? 'bg-zinc-800 text-white font-semibold border border-zinc-700'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent'
+                  ? 'bg-zinc-900 text-white font-medium border border-zinc-700'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60 border border-transparent'
               }`}
             >
               {cat}
@@ -180,9 +180,9 @@ export default function GastosRecurrentesPage() {
 
       {/* Grid de Gastos o Loading o Empty State */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-44 rounded-2xl bg-zinc-900/80 border border-zinc-800" />
+            <div key={i} className="h-44 rounded-xl bg-zinc-950 border border-zinc-800/80" />
           ))}
         </div>
       ) : filteredExpenses.length === 0 ? (
